@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-paper-50 text-ink-700 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    min-width: 1280px;
+  }
+
+  /* Tabular numerics on mono by default — trust scores, counts, timestamps. */
+  .font-mono,
+  code,
+  pre {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Visible focus ring for keyboard nav. Cyan brand accent, never used to encode data. */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.25);
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background-color: rgba(34, 211, 238, 0.25);
+  }
+}
+
+@layer components {
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium;
+  }
+
+  .hairline {
+    @apply border-paper-300;
+  }
+}
