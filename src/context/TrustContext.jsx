@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { TODAYS_WORK } from '../data/todaysWork.js';
 
 // Single app-wide context per docs/30-state-contract.md.
 // One provider owns all cross-screen concerns: navigation, active supplier/pillar,
@@ -23,6 +24,26 @@ const SCAN_TICK_MS = 60 * 1000;
 const TOAST_TTL_MS = 8000;
 const TOAST_DEDUPE_WINDOW_MS = 2000;
 const TOAST_MAX_VISIBLE = 3;
+const CHASE_SEND_MS = 2000;
+const CHASE_INBOUND_EVIDENCE_MS = 15 * 1000;
+
+const TODAYS_WORK_BY_FLAG_ID = new Map(
+  TODAYS_WORK.filter((item) => item.flagId).map((item) => [item.flagId, item])
+);
+
+function resolveBasfDemoChaseInboundKey(flagId) {
+  if (!flagId || typeof flagId !== 'string') return null;
+  if (
+    flagId === 'flag-sup-basf-allergen' ||
+    flagId === 'ephemeral-sup-basf-allergen'
+  ) {
+    return 'allergen';
+  }
+  if (flagId === 'flag-sup-basf-fei' || flagId === 'ephemeral-sup-basf-fei') {
+    return 'fei';
+  }
+  return null;
+}
 
 function readModeFromUrl() {
   if (typeof window === 'undefined' || !window.location) return 'full';
@@ -50,6 +71,7 @@ export function TrustProvider({ children }) {
   // shape: { flagId: string } | null. The modal reads the flag + supplier
   // from the live data map, so we don't snapshot state beyond the id.
   const [chaseDraft, setChaseDraft] = useState(null);
+  const [chaseSendEvents, setChaseSendEvents] = useState(() => new Map());
   const [mode] = useState(() => readModeFromUrl());
   // Flag resolutions — keyed by flag id. Value shape:
   //   { resolvedAt: ISO, resolvedBy: string, note: string | null }
@@ -65,6 +87,16 @@ export function TrustProvider({ children }) {
   // Feedback trio per docs/70-agentic-surfaces.md §Operator feedback.
   // Session-only. Projects into the Activity timeline as a first-class event.
   const [documentReviews, setDocumentReviews] = useState(() => new Map());
+  // Homepage work completions — keyed by today's-work item id. Session-only so
+  // demo actions feel live without mutating the hand-authored ranking data.
+  const [todaysWorkCompletions, setTodaysWorkCompletions] = useState(
+    () => new Map()
+  );
+  // BASF demo: inbound docs ~30s after chase send for allergen + FEI pillars.
+  const [basfDemoInboundEvidence, setBasfDemoInboundEvidence] = useState(() => ({
+    allergen: false,
+    fei: false,
+  }));
 
   // Last-scan clock — initialized once, ticked every 60s for live display.
   const [lastScanAt] = useState(() => new Date(Date.now() - LAST_SCAN_OFFSET_MS).toISOString());
@@ -78,6 +110,8 @@ export function TrustProvider({ children }) {
   // Toast timers, keyed by toast id. Hover pauses; leave resumes.
   const toastTimers = useRef(new Map());
   const recentToastKeys = useRef(new Map()); // dedupe window
+  const chaseSendTimers = useRef(new Map());
+  const chaseInboundTimers = useRef(new Map());
 
   const dismissToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -199,6 +233,82 @@ export function TrustProvider({ children }) {
 
   const closeChaseDraft = useCallback(() => setChaseDraft(null), []);
 
+  const startChaseSend = useCallback(
+    (flagId, meta = {}) => {
+      if (!flagId) return;
+      const startedAt = new Date().toISOString();
+      const existingTimer = chaseSendTimers.current.get(flagId);
+      if (existingTimer) window.clearTimeout(existingTimer);
+
+      setChaseSendEvents((prev) => {
+        const next = new Map(prev);
+        next.set(flagId, {
+          status: 'sending',
+          startedAt,
+          sentAt: null,
+          to: meta.to || null,
+          supplierId: meta.supplierId || null,
+        });
+        return next;
+      });
+
+      const timer = window.setTimeout(() => {
+        setChaseSendEvents((prev) => {
+          const current = prev.get(flagId);
+          if (!current) return prev;
+          const next = new Map(prev);
+          next.set(flagId, {
+            ...current,
+            status: 'sent',
+            sentAt: new Date().toISOString(),
+          });
+          return next;
+        });
+        chaseSendTimers.current.delete(flagId);
+      }, CHASE_SEND_MS);
+      chaseSendTimers.current.set(flagId, timer);
+
+      const inboundKey = resolveBasfDemoChaseInboundKey(flagId);
+      const supplierId = meta.supplierId || null;
+      const supplierOk =
+        supplierId === 'sup-basf' ||
+        (flagId.startsWith('flag-sup-basf-') || flagId.startsWith('ephemeral-sup-basf-'));
+      if (inboundKey && supplierOk) {
+        const prevInbound = chaseInboundTimers.current.get(inboundKey);
+        if (prevInbound) window.clearTimeout(prevInbound);
+        const inboundTimer = window.setTimeout(() => {
+          chaseInboundTimers.current.delete(inboundKey);
+          setBasfDemoInboundEvidence((prev) => {
+            if (prev[inboundKey]) return prev;
+            return { ...prev, [inboundKey]: true };
+          });
+          emitToast({
+            tone: 'ok',
+            title: 'Updated evidence received',
+            body:
+              inboundKey === 'allergen'
+                ? 'BASF Personal Care · refreshed allergen declaration'
+                : 'BASF Personal Care · FEI registration confirmation',
+            supplierId: 'sup-basf',
+          });
+        }, CHASE_INBOUND_EVIDENCE_MS);
+        chaseInboundTimers.current.set(inboundKey, inboundTimer);
+      }
+    },
+    [emitToast]
+  );
+
+  useEffect(() => {
+    return () => {
+      chaseSendTimers.current.forEach((timer) => window.clearTimeout(timer));
+      chaseSendTimers.current.clear();
+      chaseInboundTimers.current.forEach((timer) =>
+        window.clearTimeout(timer)
+      );
+      chaseInboundTimers.current.clear();
+    };
+  }, []);
+
   const resolveFlag = useCallback((flagId, note) => {
     if (!flagId) return;
     const trimmed = (note || '').trim();
@@ -248,6 +358,31 @@ export function TrustProvider({ children }) {
     });
   }, []);
 
+  const completeTodaysWorkItem = useCallback((itemId, source = 'action') => {
+    if (!itemId) return false;
+    let didComplete = false;
+    setTodaysWorkCompletions((prev) => {
+      if (prev.has(itemId)) return prev;
+      const next = new Map(prev);
+      next.set(itemId, {
+        completedAt: new Date().toISOString(),
+        source,
+      });
+      didComplete = true;
+      return next;
+    });
+    return didComplete;
+  }, []);
+
+  const completeTodaysWorkForFlag = useCallback(
+    (flagId, source = 'action') => {
+      const item = flagId ? TODAYS_WORK_BY_FLAG_ID.get(flagId) : null;
+      if (!item) return false;
+      return completeTodaysWorkItem(item.id, source);
+    },
+    [completeTodaysWorkItem]
+  );
+
   const value = useMemo(
     () => ({
       // active navigation
@@ -260,8 +395,11 @@ export function TrustProvider({ children }) {
       toasts,
       auditBundle,
       chaseDraft,
+      chaseSendEvents,
       resolutions,
       documentReviews,
+      todaysWorkCompletions,
+      basfDemoInboundEvidence,
 
       // chrome
       mode,
@@ -275,6 +413,7 @@ export function TrustProvider({ children }) {
       closeAuditBundle,
       openChaseDraft,
       closeChaseDraft,
+      startChaseSend,
       emitToast,
       dismissToast,
       pauseToast,
@@ -283,6 +422,8 @@ export function TrustProvider({ children }) {
       reopenFlag,
       emitDocumentReview,
       clearDocumentReview,
+      completeTodaysWorkItem,
+      completeTodaysWorkForFlag,
     }),
     [
       page,
@@ -292,8 +433,11 @@ export function TrustProvider({ children }) {
       toasts,
       auditBundle,
       chaseDraft,
+      chaseSendEvents,
       resolutions,
       documentReviews,
+      todaysWorkCompletions,
+      basfDemoInboundEvidence,
       mode,
       lastScanAt,
       now,
@@ -303,6 +447,7 @@ export function TrustProvider({ children }) {
       closeAuditBundle,
       openChaseDraft,
       closeChaseDraft,
+      startChaseSend,
       emitToast,
       dismissToast,
       pauseToast,
@@ -311,6 +456,8 @@ export function TrustProvider({ children }) {
       reopenFlag,
       emitDocumentReview,
       clearDocumentReview,
+      completeTodaysWorkItem,
+      completeTodaysWorkForFlag,
     ]
   );
 

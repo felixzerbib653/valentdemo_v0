@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import SupplierHeader from './SupplierHeader.jsx';
 import PillarList from './PillarList.jsx';
 import EvidencePanel from './EvidencePanel.jsx';
 import ActivityPanel from './ActivityPanel.jsx';
-import { getSupplier } from '../../data/suppliers.js';
+import { getSupplier, applyBasfDemoInboundEvidence } from '../../data/suppliers.js';
 import { useTrust } from '../../context/TrustContext.jsx';
 
 // SupplierDetail — three-column drill-down for one supplier.
 // Per docs/02-screen-supplier-detail.md.
 
 export default function SupplierDetail() {
-  const { activeSupplierId, navigate } = useTrust();
-  const supplier = activeSupplierId ? getSupplier(activeSupplierId) : null;
+  const { activeSupplierId, navigate, basfDemoInboundEvidence } = useTrust();
+  const supplierRaw = activeSupplierId ? getSupplier(activeSupplierId) : null;
+  const supplier = useMemo(() => {
+    if (!supplierRaw) return null;
+    if (supplierRaw.id !== 'sup-basf') return supplierRaw;
+    return applyBasfDemoInboundEvidence(supplierRaw, basfDemoInboundEvidence);
+  }, [supplierRaw, basfDemoInboundEvidence]);
 
   if (!supplier) {
     return (

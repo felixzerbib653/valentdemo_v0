@@ -26,7 +26,7 @@ A horizontal row of four source cards, each ~220px wide. Each card:
 - Count chip ("14 this week")
 - Settings ghost link ("Configure")
 
-All four are connected in the demo (hard-coded). Clicking "Configure" emits a toast: "Source configuration opened (simulated)."
+All four are connected in the demo (hard-coded). Clicking "Configure" emits a toast: "Source configuration opened."
 
 This strip is the "Vanta for your inbox" moment — it visibly locates where the compliance evidence originates.
 
@@ -78,7 +78,7 @@ Strip anatomy:
 - Action row (left-to-right):
   - **Approve & link** — primary button, emerald-600 fill, dark text on light fill per design system. Submits with current field values. Emits an `ok` toast ("Linked to {supplier} · {pillar}") and updates `linkStatus → 'linked'`.
   - **Reject** — ghost button, red-600 text. Marks `linkStatus → 'rejected'`, removes row from Needs review count. Requires a one-line reason (small popover textarea, min 6 chars).
-  - **Request re-extraction** — ghost button, ink-600 text. Flags the doc for a second pass; `linkStatus` stays `needs-review` but row gets a "requeued" chip. Deferred/simulated in demo.
+  - **Request re-extraction** — ghost button, ink-600 text. Flags the doc for a second pass; `linkStatus` stays `needs-review` but row gets a "requeued" chip. Deferred in demo.
 - Keyboard: `Cmd/Ctrl-Enter` triggers Approve; `Esc` closes the modal without action.
 
 Every action emits a `documentReview` event into the audit trail. Events are readable from Supplier Detail ActivityPanel under the existing "Recent activity" section, alongside the phase-3.5 `flag-resolved` synthetic events. Event payload: `{ documentId, supplierId, action: 'approve' | 'reject' | 'requeue', actor, at, correctedFields?, reason? }`.

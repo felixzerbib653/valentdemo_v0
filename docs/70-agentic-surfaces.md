@@ -118,7 +118,7 @@ Every agentic surface has a declared mode and gate. The build agent must enforce
   - Subject: context-specific (e.g., "Request: current §607 listing — due Apr 30").
   - Body: three short paragraphs — opener, specific ask with deadline, sign-off. Plain English, professional register, no jargon.
   - Footer: "Drafted by Valent · review before sending."
-- User can edit any field. "Send" routes through mailto or logs a simulated send with a toast confirmation.
+- User can edit any field. "Send" routes through mailto or logs the send with a toast confirmation.
 - Modal is reusable across multiple flag types — body copy varies by flag.category.
 
 **Copy rule:** Draft body uses plain English. "Hi {contact name}, we're refreshing our MoCRA evidence and need a current §607 cosmetic product listing for {ingredient/product}. Can you send by {deadline}? Thanks, {user name}."

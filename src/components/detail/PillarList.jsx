@@ -125,7 +125,7 @@ export default function PillarList({ supplier }) {
                         </>
                       ) : null}
                       <span className={`font-semibold uppercase tracking-[0.08em] ${tone.chipTint}`}>
-                        {tone.word}
+                        {p.key === 'fei' && status === 'fail' ? 'Expired' : tone.word}
                       </span>
                     </div>
                   </div>

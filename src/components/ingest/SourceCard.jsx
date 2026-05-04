@@ -6,7 +6,7 @@ import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
 // Per docs/04-screen-ingest-inbox.md §Sources strip.
 //
 // All sources are "connected" in the demo (hard-coded). Configure emits a
-// simulated toast; this is not a live integration surface.
+// toast; this is not a live integration surface.
 
 export default function SourceCard({ source, Icon, label, sourceDetail, lastSyncAt, weekCount }) {
   const { emitToast, now } = useTrust();
@@ -14,7 +14,7 @@ export default function SourceCard({ source, Icon, label, sourceDetail, lastSync
   const handleConfigure = () => {
     emitToast({
       tone: 'info',
-      title: 'Source configuration opened (simulated)',
+      title: 'Source configuration opened',
       body: `${label} · ${sourceDetail}`,
     });
   };

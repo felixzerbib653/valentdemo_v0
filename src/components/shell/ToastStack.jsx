@@ -11,7 +11,7 @@ import { useTrust } from '../../context/TrustContext.jsx';
 // ToastStack — top-right queue, up to 3 visible, auto-dismiss at 8s unless
 // hovered. Per docs/20-design-system.md §Toast + docs/30-state-contract.md §toasts.
 //
-// Pulled forward from phase 3 because phase-2 screens emit toasts off simulated
+// Pulled forward from phase 3 because phase-2 screens emit toasts off demo
 // actions (Request update, Compose, Open in CRM, More menu). Rendering the
 // stack completes the feedback loop.
 

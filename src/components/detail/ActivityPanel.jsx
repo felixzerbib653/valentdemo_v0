@@ -267,7 +267,7 @@ function ContactBlock({ supplier }) {
             emitToast({
               tone: 'info',
               title: 'Compose window opened in Outlook',
-              body: `To: ${contact.email} (simulated)`,
+              body: `To: ${contact.email}`,
               supplierId: supplier.id,
             })
           }
@@ -282,7 +282,7 @@ function ContactBlock({ supplier }) {
             emitToast({
               tone: 'info',
               title: 'Open in CRM',
-              body: `CRM record for ${supplier.name} (simulated)`,
+              body: `CRM record for ${supplier.name}`,
               supplierId: supplier.id,
             })
           }

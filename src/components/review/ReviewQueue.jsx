@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, ChevronDown } from 'lucide-react';
-import { FLAGS, getFlagCounts } from '../../data/flags.js';
-import { getSupplier, SUPPLIERS } from '../../data/suppliers.js';
+import { FLAGS, getFlagCounts, filterFlagsForDemoSession } from '../../data/flags.js';
+import { getSupplier, applyBasfDemoInboundEvidence } from '../../data/suppliers.js';
 import { STATUS_ORDER } from '../../data/trustPillars.js';
 import { useTrust } from '../../context/TrustContext.jsx';
 import FilterBar from './FilterBar.jsx';
@@ -41,7 +41,7 @@ function applyFilters(flags, filters, activeSupplierId, resolutions) {
   });
 }
 
-function groupBySupplier(flags) {
+function groupBySupplier(flags, basfInbound) {
   const map = new Map();
   for (const f of flags) {
     const key = f.supplierId || '__unlinked__';
@@ -50,7 +50,11 @@ function groupBySupplier(flags) {
   }
   const groups = [];
   for (const [supplierId, items] of map.entries()) {
-    const supplier = supplierId === '__unlinked__' ? null : getSupplier(supplierId);
+    let supplier =
+      supplierId === '__unlinked__' ? null : getSupplier(supplierId);
+    if (supplier?.id === 'sup-basf') {
+      supplier = applyBasfDemoInboundEvidence(supplier, basfInbound);
+    }
     groups.push({ supplierId, supplier, items });
   }
   groups.sort((a, b) => {
@@ -77,7 +81,14 @@ function sortFlags(flags) {
 }
 
 export default function ReviewQueue() {
-  const { activeSupplierId, activePillarKey, navigate, now, resolutions } = useTrust();
+  const {
+    activeSupplierId,
+    activePillarKey,
+    navigate,
+    now,
+    resolutions,
+    basfDemoInboundEvidence,
+  } = useTrust();
   // Initialize the pillar filter from the incoming pillar scope so a deep-link
   // from Supplier Detail ("Open in Review Queue" ghost link on a fail/pending
   // pillar) lands on a pre-filtered queue. Subsequent filter changes inside
@@ -105,13 +116,21 @@ export default function ReviewQueue() {
 
   const baseCounts = useMemo(() => getFlagCounts(), []);
 
+  const sessionFlags = useMemo(
+    () => filterFlagsForDemoSession(FLAGS, basfDemoInboundEvidence),
+    [basfDemoInboundEvidence]
+  );
+
   const visible = useMemo(
-    () => sortFlags(applyFilters(FLAGS, filters, activeSupplierId, resolutions)),
-    [filters, activeSupplierId, resolutions]
+    () =>
+      sortFlags(
+        applyFilters(sessionFlags, filters, activeSupplierId, resolutions)
+      ),
+    [sessionFlags, filters, activeSupplierId, resolutions]
   );
 
   const headerCounts = useMemo(() => {
-    const thisWeek = FLAGS.filter((f) => {
+    const thisWeek = sessionFlags.filter((f) => {
       return now - new Date(f.openedAt).getTime() <= WEEK_MS;
     }).length;
     return {
@@ -120,9 +139,12 @@ export default function ReviewQueue() {
       me: baseCounts.me,
       unassigned: baseCounts.unassigned,
     };
-  }, [visible, now, baseCounts, resolutions]);
+  }, [visible, now, baseCounts, resolutions, sessionFlags]);
 
-  const groups = useMemo(() => groupBySupplier(visible), [visible]);
+  const groups = useMemo(
+    () => groupBySupplier(visible, basfDemoInboundEvidence),
+    [visible, basfDemoInboundEvidence]
+  );
   const groupingOn = !activeSupplierId;
 
   const routeFlag = (flag) => {

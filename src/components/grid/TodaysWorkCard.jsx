@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertOctagon,
   Clock,
@@ -8,27 +8,26 @@ import {
   FileText,
   ArrowUpRight,
   CircleDashed,
+  CheckCircle,
 } from 'lucide-react';
 import { TODAYS_WORK } from '../../data/todaysWork.js';
 import { SUPPLIERS_BY_ID } from '../../data/suppliers.js';
-import ProvenanceChip from '../shared/ProvenanceChip.jsx';
 import { useTrust } from '../../context/TrustContext.jsx';
+import ChaseSendStatus from '../shared/ChaseSendStatus.jsx';
 
 // TodaysWorkCard — Trust Grid hero.
 // Per docs/70-agentic-surfaces.md §Surface #7.
 //
 // This is the one surface where the agent ranks — not extracts, not computes,
 // not drafts. It sits above the PortfolioSummaryBand so it's the first thing
-// Sarah reads at 9am. The card itself wears one <ProvenanceChip variant="ranked" />
-// in its header; every row inherits the same ranking provenance, so rows don't
-// re-attribute.
+// Sarah reads at 9am.
 //
 // Click behavior:
 //   - row body → openSupplier(supplierId). Sarah lands on the supplier she
 //     needs to work on.
 //   - CTA button → action-keyed router.
 //       - draft-email + flagId  → openChaseDraft(flagId). Surface #4 entry.
-//       - request-renewal       → ok toast (simulated).
+//       - request-renewal + flagId → openChaseDraft(flagId). Same reviewed-send path.
 //       - reconcile             → navigate('review', { supplierId }).
 //       - open-supplier         → openSupplier(supplierId).
 //     This mirrors FlagRow.handleRemediationCta so the same action label
@@ -65,7 +64,7 @@ const ACTION_LABELS = {
       'bg-ink-900 text-paper-0 hover:bg-ink-700 focus-visible:shadow-focus',
     Icon: Mail,
     toastTitle: 'Chase email drafted',
-    toastBody: (supplier) => `Draft prepared for ${supplier.name} (simulated).`,
+    toastBody: (supplier) => `Draft prepared for ${supplier.name}.`,
   },
   'request-renewal': {
     toneClass:
@@ -73,7 +72,7 @@ const ACTION_LABELS = {
     Icon: FileText,
     toastTitle: 'Renewal request queued',
     toastBody: (supplier) =>
-      `Request prepared for ${supplier.name} (simulated).`,
+      `Request prepared for ${supplier.name}.`,
   },
   'open-supplier': {
     toneClass:
@@ -88,15 +87,49 @@ const ACTION_LABELS = {
     Icon: CircleDashed,
     toastTitle: 'Review queue opened',
     toastBody: (supplier) =>
-      `Scoped to ${supplier.name} for reconciliation (simulated).`,
+      `Scoped to ${supplier.name} for reconciliation.`,
   },
 };
 
 export default function TodaysWorkCard() {
-  const { openSupplier, navigate, emitToast, openChaseDraft, now } = useTrust();
+  const {
+    openSupplier,
+    navigate,
+    emitToast,
+    openChaseDraft,
+    todaysWorkCompletions,
+    completeTodaysWorkItem,
+    chaseSendEvents,
+  } = useTrust();
   const items = TODAYS_WORK; // already authored in rank order
+  const completedIds = useMemo(
+    () => new Set(todaysWorkCompletions?.keys?.() || []),
+    [todaysWorkCompletions]
+  );
+  const [dismissedIds, setDismissedIds] = useState(() => new Set(completedIds));
 
-  const counts = items.reduce(
+  useEffect(() => {
+    const timers = [];
+    completedIds.forEach((id) => {
+      if (dismissedIds.has(id)) return;
+      timers.push(
+        window.setTimeout(() => {
+          setDismissedIds((prev) => {
+            if (prev.has(id)) return prev;
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+          });
+        }, 900)
+      );
+    });
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [completedIds, dismissedIds]);
+
+  const activeItems = items.filter((item) => !completedIds.has(item.id));
+  const visibleItems = items.filter((item) => !dismissedIds.has(item.id));
+
+  const counts = activeItems.reduce(
     (acc, it) => {
       acc[it.severity] = (acc[it.severity] || 0) + 1;
       return acc;
@@ -104,15 +137,14 @@ export default function TodaysWorkCard() {
     { blocker: 0, watch: 0, informational: 0 }
   );
 
-  // Every item shares the same rankedAt — pull from the first row.
-  const rankedAt = items[0]?.rankedAt || null;
-
   function handleRowOpen(item) {
+    if (completedIds.has(item.id)) return;
     if (item.supplierId) openSupplier(item.supplierId);
   }
 
   function handleCta(item, evt) {
     evt.stopPropagation();
+    if (completedIds.has(item.id)) return;
     const actionKey = item.cta?.action || 'open-supplier';
     const supplier = SUPPLIERS_BY_ID[item.supplierId];
     if (!supplier) return;
@@ -132,7 +164,10 @@ export default function TodaysWorkCard() {
       });
       return;
     }
-    if (actionKey === 'draft-email' && item.flagId) {
+    if (
+      (actionKey === 'draft-email' || actionKey === 'request-renewal') &&
+      item.flagId
+    ) {
       // Surface #4 entry point — route through ChaseDraftModal, do not toast.
       openChaseDraft(item.flagId);
       return;
@@ -147,6 +182,9 @@ export default function TodaysWorkCard() {
         supplierId: item.supplierId,
       });
     }
+    if (actionKey === 'request-renewal') {
+      completeTodaysWorkItem(item.id, 'request-renewal');
+    }
   }
 
   return (
@@ -159,9 +197,9 @@ export default function TodaysWorkCard() {
           <h3 className="text-sm font-semibold text-ink-900">Today's work</h3>
           <span className="text-xs text-ink-500">
             <span className="font-mono tabular-nums text-ink-700">
-              {items.length}
+              {activeItems.length}
             </span>{' '}
-            actions
+            actions left
             {counts.blocker > 0 && (
               <>
                 <span className="mx-1.5 text-ink-400">·</span>
@@ -191,19 +229,17 @@ export default function TodaysWorkCard() {
             )}
           </span>
         </div>
-        <ProvenanceChip
-          variant="ranked"
-          timestamp={rankedAt}
-          nowMs={now}
-          title="Ranked by Valent across open flags, deadlines, and supplier scope"
-        />
       </header>
 
       <ul role="list" className="divide-y divide-paper-200">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <WorkRow
             key={item.id}
             item={item}
+            completed={completedIds.has(item.id)}
+            chaseSendEvent={
+              item.flagId ? chaseSendEvents?.get(item.flagId) || null : null
+            }
             onOpen={() => handleRowOpen(item)}
             onCta={(evt) => handleCta(item, evt)}
           />
@@ -213,7 +249,7 @@ export default function TodaysWorkCard() {
   );
 }
 
-function WorkRow({ item, onOpen, onCta }) {
+function WorkRow({ item, completed, chaseSendEvent, onOpen, onCta }) {
   const sevMeta = SEVERITY_META[item.severity] || SEVERITY_META.informational;
   const supplier = SUPPLIERS_BY_ID[item.supplierId];
   const actionKey = item.cta?.action || 'open-supplier';
@@ -231,14 +267,21 @@ function WorkRow({ item, onOpen, onCta }) {
           onOpen();
         }
       }}
-      className="group relative flex cursor-pointer items-center gap-4 px-6 py-3 transition-colors hover:bg-paper-50 focus:outline-none focus-visible:bg-paper-50 focus-visible:shadow-focus"
+      aria-disabled={completed ? 'true' : undefined}
+      className={`group relative flex cursor-pointer items-center gap-4 px-6 py-3 transition-colors hover:bg-paper-50 focus:outline-none focus-visible:bg-paper-50 focus-visible:shadow-focus ${
+        completed
+          ? 'todays-work-row-complete pointer-events-none border-ok-100 bg-ok-50 text-ok-700 hover:bg-ok-50'
+          : ''
+      }`}
     >
       {/* Rank badge */}
       <span
         aria-hidden="true"
-        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-paper-100 font-mono text-[11px] font-semibold tabular-nums text-ink-700"
+        className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-semibold tabular-nums ${
+          completed ? 'todays-work-check-pop bg-ok text-paper-0' : 'bg-paper-100 text-ink-700'
+        }`}
       >
-        {item.rank}
+        {completed ? <CheckCircle size={14} strokeWidth={2.5} /> : item.rank}
       </span>
 
       {/* Severity pill */}
@@ -252,7 +295,11 @@ function WorkRow({ item, onOpen, onCta }) {
       {/* Title + reason */}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <p className="truncate text-sm font-medium text-ink-900">
+          <p
+            className={`truncate text-sm font-medium ${
+              completed ? 'text-ok-700' : 'text-ink-900'
+            }`}
+          >
             {item.title}
           </p>
           {supplier && (
@@ -261,7 +308,9 @@ function WorkRow({ item, onOpen, onCta }) {
             </span>
           )}
         </div>
-        <p className="mt-0.5 truncate text-xs text-ink-500">{item.reason}</p>
+        <p className={`mt-0.5 truncate text-xs ${completed ? 'text-ok-700/75' : 'text-ink-500'}`}>
+          {completed ? "Completed - updating today's work" : item.reason}
+        </p>
       </div>
 
       {/* Due hint */}
@@ -277,15 +326,20 @@ function WorkRow({ item, onOpen, onCta }) {
         </span>
       )}
 
+      <ChaseSendStatus event={chaseSendEvent} />
+
       {/* CTA */}
-      <button
-        type="button"
-        onClick={onCta}
-        className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none ${actionMeta.toneClass}`}
-      >
-        {CtaIcon && <CtaIcon size={12} strokeWidth={2.25} />}
-        <span>{item.cta?.label || 'Open'}</span>
-      </button>
+      {!chaseSendEvent ? (
+        <button
+          type="button"
+          onClick={onCta}
+          disabled={completed}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none ${actionMeta.toneClass}`}
+        >
+          {CtaIcon && <CtaIcon size={12} strokeWidth={2.25} />}
+          <span>{completed ? 'Completed' : item.cta?.label || 'Open'}</span>
+        </button>
+      ) : null}
 
       {/* Row chevron — hint that the row body is clickable. */}
       <ChevronRight

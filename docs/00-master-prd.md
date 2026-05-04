@@ -74,7 +74,7 @@ Every pillar points to one or more evidence records. An evidence record is a doc
 
 ## Continuous monitoring
 
-The product is framed as always-on. Every screen carries a small "last scan · Nm ago" pulse in the top bar. Scans in this demo are simulated — the hard-coded `lastScan` timestamp is set a few minutes in the past. Underneath, the model is: every supplier's pillars are re-evaluated whenever new evidence arrives or existing evidence expires. Changes trigger toast events in the right-side activity feed (phase 3).
+The product is framed as always-on. Every screen carries a small "last scan · Nm ago" pulse in the top bar. Scans in this demo use the hard-coded `lastScan` timestamp set a few minutes in the past. Underneath, the model is: every supplier's pillars are re-evaluated whenever new evidence arrives or existing evidence expires. Changes trigger toast events in the right-side activity feed (phase 3).
 
 ## Success criteria for the demo
 
@@ -94,7 +94,7 @@ A PE-grade reviewer who watches a ninety-second walkthrough can articulate:
 
 ## Out of scope for this demo
 
-- Real FDA API integration. The §606 / §607 cross-checks are simulated on hard-coded data.
+- Real FDA API integration. The §606 / §607 cross-checks are represented on hard-coded data.
 - Multi-tenancy, auth, user management.
 - Mobile breakpoints below 1024px. Demo is desktop-first.
 - Localization.

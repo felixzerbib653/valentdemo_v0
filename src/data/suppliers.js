@@ -19,7 +19,7 @@ const roster = [
     addedAt: '2023-06-14T00:00:00.000Z',
     lastScanAt: '2026-04-20T13:08:00.000Z',
     lastUpdatedAt: '2026-04-20T11:42:00.000Z',
-    evidenceCount: 5,
+    evidenceCount: 6,
     deltaWeek: -4,
     primaryContact: {
       name: 'Mara Kessler',
@@ -29,13 +29,13 @@ const roster = [
     notes:
       'Consolidated supplier record across Ludwigshafen and Düsseldorf facilities. FEI on the Düsseldorf site has lapsed — paperwork sent 2026-03-22, no response. Allergen statement from 2024 no longer reflects the current nut-oil blend.',
     pillars: {
-      fei: 'missing',
+      fei: 'fail',
       cosmeticListing: 'pass',
       safety: 'pass',
       allergen: 'fail',
       origin: 'pass',
       purity: 'pending',
-      freshness: 'fail',
+      freshness: 'pass',
     },
   },
   {
@@ -459,6 +459,27 @@ export function getPortfolioSummary() {
     counts,
     portfolioScore,
     portfolioDeltaWeek: 2,
+  };
+}
+
+// Live demo: after chase letters for BASF allergen + FEI, session state marks
+// evidence as received; project an effective supplier for score / status / pillars.
+export function applyBasfDemoInboundEvidence(supplier, inbound) {
+  if (!supplier || supplier.id !== 'sup-basf') return supplier;
+  const inboundSafe = inbound || {};
+  const pillars = { ...supplier.pillars };
+  if (inboundSafe.allergen) pillars.allergen = 'pass';
+  if (inboundSafe.fei) pillars.fei = 'pass';
+  const trustScore = computeTrustScore(pillars);
+  const both = Boolean(inboundSafe.allergen && inboundSafe.fei);
+  const status = both
+    ? supplier.statusOverride || deriveStatus(trustScore)
+    : 'blocked';
+  return {
+    ...supplier,
+    pillars,
+    trustScore,
+    status,
   };
 }
 

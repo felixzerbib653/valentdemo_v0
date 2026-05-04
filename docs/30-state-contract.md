@@ -99,7 +99,7 @@ When a user navigates from Trust Grid → Supplier Detail → back to Trust Grid
 
 - `openAuditBundle(supplierId, pillarKeys?)` — `pillarKeys` defaults to all pillars. Used by Trust Grid CTA, Supplier Detail CTA, and Review Queue bulk action (phase 3).
 - Modal mounts, generates a stylized preview from hard-coded data, shows a "download" ghost CTA.
-- "Download" → emits an `ok` toast: "Audit bundle queued · will email when ready" (simulated). Modal stays open; user can close manually.
+- "Download" → emits an `ok` toast: "Audit bundle queued · will email when ready". Modal stays open; user can close manually.
 - `closeAuditBundle()` clears state. Escape key and backdrop click both invoke this.
 
 ## Document review events

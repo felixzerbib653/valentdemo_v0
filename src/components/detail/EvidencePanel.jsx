@@ -9,6 +9,17 @@ import {
 } from '../../data/documents.js';
 import { useTrust } from '../../context/TrustContext.jsx';
 
+function chaseSendEventForPillar(supplierId, pillarKey, chaseSendEvents) {
+  if (!supplierId || !pillarKey || !chaseSendEvents) return null;
+  const realId = `flag-${supplierId}-${pillarKey}`;
+  const ephemeralId = `ephemeral-${supplierId}-${pillarKey}`;
+  return (
+    chaseSendEvents.get(realId) ||
+    chaseSendEvents.get(ephemeralId) ||
+    null
+  );
+}
+
 // EvidencePanel — center column on Supplier Detail.
 // Per docs/02-screen-supplier-detail.md §Center column.
 //
@@ -35,15 +46,28 @@ const MISSING_PILLAR_COPY = {
 };
 
 export default function EvidencePanel({ supplier }) {
-  const { activePillarKey, emitToast } = useTrust();
+  const { activePillarKey, emitToast, basfDemoInboundEvidence, chaseSendEvents } =
+    useTrust();
   const [preview, setPreview] = useState(null);
 
   const docs = useMemo(() => {
+    let list;
     if (activePillarKey) {
-      return getDocumentsForPillar(supplier.id, activePillarKey);
+      list = getDocumentsForPillar(supplier.id, activePillarKey);
+    } else {
+      list = getDocumentsForSupplier(supplier.id);
     }
-    return getDocumentsForSupplier(supplier.id);
-  }, [supplier.id, activePillarKey]);
+    if (supplier.id !== 'sup-basf') return list;
+    return list.map((d) => {
+      if (d.id === 'doc-basf-003' && basfDemoInboundEvidence.allergen) {
+        return { ...d, flags: [] };
+      }
+      if (d.id === 'doc-basf-006' && basfDemoInboundEvidence.fei) {
+        return { ...d, flags: [] };
+      }
+      return d;
+    });
+  }, [supplier.id, activePillarKey, basfDemoInboundEvidence]);
 
   const pillar = activePillarKey ? PILLARS[activePillarKey] : null;
   const pillarStatus = activePillarKey
@@ -57,8 +81,8 @@ export default function EvidencePanel({ supplier }) {
       tone: 'info',
       title: 'Compose window opened in Outlook',
       body: pillar
-        ? `Template drafted for ${pillar.label.toLowerCase()} from ${supplier.primaryContact?.name || 'supplier contact'}. (simulated)`
-        : `Template drafted for ${supplier.primaryContact?.name || 'supplier contact'}. (simulated)`,
+        ? `Template drafted for ${pillar.label.toLowerCase()} from ${supplier.primaryContact?.name || 'supplier contact'}.`
+        : `Template drafted for ${supplier.primaryContact?.name || 'supplier contact'}.`,
       supplierId: supplier.id,
     });
 
@@ -66,7 +90,7 @@ export default function EvidencePanel({ supplier }) {
     emitToast({
       tone: 'info',
       title: 'Upload window opened',
-      body: 'Select a PDF or image to attach to this supplier. (simulated)',
+      body: 'Select a PDF or image to attach to this supplier.',
       supplierId: supplier.id,
     });
 
@@ -126,6 +150,20 @@ export default function EvidencePanel({ supplier }) {
                 doc={doc}
                 onOpen={(d) => setPreview(d)}
                 showPillarTag={!activePillarKey}
+                demoEvidenceVerified={
+                  (doc.id === 'doc-basf-003' &&
+                    basfDemoInboundEvidence.allergen) ||
+                  (doc.id === 'doc-basf-006' && basfDemoInboundEvidence.fei)
+                }
+                chaseSendEvent={
+                  doc.pillarKey
+                    ? chaseSendEventForPillar(
+                        supplier.id,
+                        doc.pillarKey,
+                        chaseSendEvents
+                      )
+                    : null
+                }
               />
             ))}
           </div>

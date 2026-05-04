@@ -107,4 +107,4 @@ Reads `suppliers.js` (the full supplier record including pillars) + `documents.j
 
 - Should the page header also carry the pillar chip strip from the grid (for consistency)? Proposal: no — the left column list is the pillar view on this page. Duplicating creates visual noise.
 - Should the delta chip show a sparkline? Probably not for v1 — keep it to a single number.
-- Is "Request update" a real action or a toast no-op? For demo: toast no-op with clear copy ("Compose window opened in Outlook — simulated"). For production: templated compose flow outside scope.
+- Is "Request update" a real action or a toast no-op? For demo: toast no-op with clear copy ("Compose window opened in Outlook"). For production: templated compose flow outside scope.

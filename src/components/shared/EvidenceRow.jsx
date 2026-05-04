@@ -1,7 +1,8 @@
 import React from 'react';
-import { FileText, Image as ImageIcon, Mail, AlertTriangle } from 'lucide-react';
+import { FileText, Image as ImageIcon, Mail, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
 import { PILLARS } from '../../data/trustPillars.js';
+import ChaseSendStatus from './ChaseSendStatus.jsx';
 
 // EvidenceRow — single-line representation of one document.
 // Per docs/20-design-system.md §Core components.
@@ -34,7 +35,13 @@ const SOURCE_LABEL = {
   manual: 'uploaded',
 };
 
-export default function EvidenceRow({ doc, onOpen, showPillarTag = false }) {
+export default function EvidenceRow({
+  doc,
+  onOpen,
+  showPillarTag = false,
+  demoEvidenceVerified = false,
+  chaseSendEvent = null,
+}) {
   const { now } = useTrust();
   const FileIcon = FILE_ICONS[doc.fileType] || FileText;
   const pillar = PILLARS[doc.pillarKey];
@@ -112,22 +119,35 @@ export default function EvidenceRow({ doc, onOpen, showPillarTag = false }) {
         )}
       </div>
 
-      {/* Score — promotes the extraction confidence to a headline figure.
-          Blue (accent-ink) on clean captures (≥ 80); amber below. Shrink-0
-          so it never pressures the middle column. */}
-      {showScore && (
-        <div className="flex shrink-0 flex-col items-end leading-none">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">
-            Score
-          </span>
+      {(chaseSendEvent || demoEvidenceVerified || showScore) && (
+      <div className="flex shrink-0 items-center gap-2">
+        {chaseSendEvent ? (
+          <ChaseSendStatus event={chaseSendEvent} compact />
+        ) : null}
+        {demoEvidenceVerified && (
           <span
-            className={`mt-0.5 font-mono text-lg font-semibold tabular-nums ${
-              scoreGood ? 'text-accent-ink' : 'text-warn-700'
-            }`}
+            className="flex shrink-0 items-center gap-1 rounded-md border border-ok-100 bg-ok-50 px-2 py-1 text-[11px] font-semibold text-ok-700"
+            title="Updated evidence received"
           >
-            {extraction.confidence}
+            <CheckCircle size={14} strokeWidth={2.25} className="shrink-0" />
+            Verified
           </span>
-        </div>
+        )}
+        {showScore && (
+          <div className="flex shrink-0 flex-col items-end leading-none">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">
+              Score
+            </span>
+            <span
+              className={`mt-0.5 font-mono text-lg font-semibold tabular-nums ${
+                scoreGood ? 'text-accent-ink' : 'text-warn-700'
+              }`}
+            >
+              {extraction.confidence}
+            </span>
+          </div>
+        )}
+      </div>
       )}
     </div>
   );

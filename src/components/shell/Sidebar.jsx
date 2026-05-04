@@ -168,14 +168,6 @@ export default function Sidebar() {
           </>
         )}
       </nav>
-
-      {/* Footer */}
-      <div className="border-t border-paper-200 px-4 py-3">
-        <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-ink-500">
-          Demo build
-        </div>
-        <div className="mt-0.5 font-mono text-[11px] text-ink-500">r1 · 2026.04.20</div>
-      </div>
     </aside>
   );
 }

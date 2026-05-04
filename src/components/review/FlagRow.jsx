@@ -17,6 +17,7 @@ import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
 import { getSupplier } from '../../data/suppliers.js';
 import { PILLARS } from '../../data/trustPillars.js';
 import ResolvePopover from './ResolvePopover.jsx';
+import ChaseSendStatus from '../shared/ChaseSendStatus.jsx';
 
 // FlagRow — a single flag in the Review Queue. Handles both open and resolved
 // states. Resolve opens a popover that captures a note; blockers require the
@@ -29,7 +30,7 @@ import ResolvePopover from './ResolvePopover.jsx';
 // Surface #3 retrofit (docs/70-agentic-surfaces.md):
 // Every auto-generated flag renders a "Suggested:" remediation band below
 // its metadata line. The suggestion is followed by a CTA button whose action
-// key drives the primary simulated response (draft-email / request-renewal
+// key drives the primary response (draft-email / request-renewal
 // / reconcile). Action 'none' (pending flags) renders the text but no CTA.
 //
 // Task #52 update: the per-row drafted ProvenanceChip is removed. Attribution
@@ -42,21 +43,21 @@ const REMEDIATION_ACTION = {
   'draft-email': {
     Icon: Mail,
     toastTitle: 'Chase email drafted',
-    toastBody: (supplier) => `Draft prepared for ${supplier.name} (simulated).`,
+    toastBody: (supplier) => `Draft prepared for ${supplier.name}.`,
     toastTone: 'ok',
   },
   'request-renewal': {
     Icon: FileText,
     toastTitle: 'Renewal request queued',
     toastBody: (supplier) =>
-      `Request prepared for ${supplier.name} (simulated).`,
+      `Request prepared for ${supplier.name}.`,
     toastTone: 'ok',
   },
   reconcile: {
     Icon: CircleDashed,
     toastTitle: 'Reconcile flagged',
     toastBody: () =>
-      'Visit Ingest Inbox to match the source document (simulated).',
+      'Visit Ingest Inbox to match the source document.',
     toastTone: 'info',
   },
 };
@@ -100,6 +101,7 @@ export default function FlagRow({ flag, onRoute }) {
     resolveFlag,
     reopenFlag,
     openChaseDraft,
+    chaseSendEvents,
   } = useTrust();
   const [routeOpen, setRouteOpen] = useState(false);
   const [resolveOpen, setResolveOpen] = useState(false);
@@ -109,6 +111,7 @@ export default function FlagRow({ flag, onRoute }) {
   const pillar = flag.pillarKey ? PILLARS[flag.pillarKey] : null;
   const resolution = resolutions?.get(flag.id) || null;
   const isResolved = Boolean(resolution);
+  const chaseSendEvent = chaseSendEvents?.get(flag.id) || null;
 
   const handleOpenSupplier = (e) => {
     e?.stopPropagation();
@@ -169,10 +172,14 @@ export default function FlagRow({ flag, onRoute }) {
   const handleRemediationCta = (e) => {
     e.stopPropagation();
     if (!remediationMeta) return;
-    // Surface #4 — "Draft email" opens the chase-draft modal instead of a
-    // simulated toast. The other two actions keep their toast-only simulation
-    // because they don't have a full authored artifact to review.
-    if (remediationActionKey === 'draft-email' && flag.supplierId) {
+    // Surface #4 — "Draft email" opens the chase-draft modal. The other two
+    // actions keep their toast-only response because they don't have a full
+    // authored artifact to review.
+    if (
+      (remediationActionKey === 'draft-email' ||
+        remediationActionKey === 'request-renewal') &&
+      flag.supplierId
+    ) {
       openChaseDraft(flag.id);
       return;
     }
@@ -287,7 +294,7 @@ export default function FlagRow({ flag, onRoute }) {
               <span className="font-medium text-ink-500">Suggested: </span>
               {remediation.text}
             </span>
-            {remediationMeta && ctaLabel && (
+            {remediationMeta && ctaLabel && !chaseSendEvent && (
               remediationActionKey === 'draft-email' ? (
                 <button
                   type="button"
@@ -312,6 +319,8 @@ export default function FlagRow({ flag, onRoute }) {
           </div>
         )}
       </div>
+
+      <ChaseSendStatus event={chaseSendEvent} />
 
       <div className="hidden shrink-0 items-center gap-2 md:flex md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100">
         {isResolved ? (

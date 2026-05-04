@@ -10,8 +10,8 @@ import ProvenanceChip from '../shared/ProvenanceChip.jsx';
 //
 // Opened via TrustContext.openChaseDraft(flagId) from a Review Queue flag's
 // "Draft email" CTA. Renders a small modal with a pre-written chase email —
-// recipient, subject, body — that the operator reviews and sends. Send is
-// simulated (toast + close); no actual mail is dispatched. There is NO
+// recipient, subject, body — that the operator reviews and sends. Send emits
+// a toast and closes; no actual mail is dispatched. There is NO
 // auto-send path — every draft requires a human confirm-and-send.
 //
 // Body copy is plain English, three short paragraphs (opener, specific ask
@@ -100,7 +100,12 @@ function buildDraft(flag, supplier) {
 }
 
 export default function ChaseDraftModal() {
-  const { chaseDraft, closeChaseDraft, emitToast } = useTrust();
+  const {
+    chaseDraft,
+    closeChaseDraft,
+    emitToast,
+    startChaseSend,
+  } = useTrust();
   if (!chaseDraft) return null;
 
   // Two entry paths — from a Review Queue flag (chaseDraft.flagId) or from
@@ -130,11 +135,18 @@ export default function ChaseDraftModal() {
       supplier={supplier}
       onClose={closeChaseDraft}
       emitToast={emitToast}
+      startChaseSend={startChaseSend}
     />
   );
 }
 
-function ChaseDraftModalInner({ flag, supplier, onClose, emitToast }) {
+function ChaseDraftModalInner({
+  flag,
+  supplier,
+  onClose,
+  emitToast,
+  startChaseSend,
+}) {
   const initial = useMemo(() => buildDraft(flag, supplier), [flag, supplier]);
   const [to, setTo] = useState(initial.to);
   const [subject, setSubject] = useState(initial.subject);
@@ -155,10 +167,14 @@ function ChaseDraftModalInner({ flag, supplier, onClose, emitToast }) {
 
   const handleSend = () => {
     if (!canSend) return;
+    startChaseSend(flag.id, {
+      to: to.trim(),
+      supplierId: supplier ? supplier.id : null,
+    });
     emitToast({
-      tone: 'ok',
-      title: 'Chase email sent',
-      body: `To ${to.trim()} · ${supplier ? supplier.name : 'supplier'} (simulated)`,
+      tone: 'info',
+      title: 'Sending chase email',
+      body: `To ${to.trim()} · ${supplier ? supplier.name : 'supplier'}`,
       supplierId: supplier ? supplier.id : null,
     });
     onClose();

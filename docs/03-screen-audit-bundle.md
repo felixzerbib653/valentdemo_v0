@@ -78,7 +78,7 @@ Reads from the supplier record passed in via `auditBundle.supplierId` in context
 
 ## Actions and their effects
 
-- **Download PDF.** Simulated: emits an `ok` toast "Audit bundle queued · will email when ready." Modal stays open. Button briefly shows a check icon for ~1.5s.
+- **Download PDF.** Emits an `ok` toast "Audit bundle queued · will email when ready." Modal stays open. Button briefly shows a check icon for ~1.5s.
 - **Email to recipient.** Opens a secondary mini-modal — to-field (prefilled if recipient was typed), subject (prefilled with "Compliance packet — [Supplier Name]"), body (short canned message with a "your bundle is attached" placeholder). Confirm button emits a toast and closes both modals.
 - **Cancel / close (X) / backdrop.** Closes modal, resets state. Does not persist edits to the "prepared for" field or the unchecked documents — demo resets on re-open.
 
@@ -104,7 +104,7 @@ Reads from the supplier record passed in via `auditBundle.supplierId` in context
 
 ## What this screen does not do
 
-- Does not generate a real PDF. The "Download" action is a simulated handoff.
+- Does not generate a real PDF. The "Download" action is a demo handoff.
 - Does not send a real email.
 - Does not let the user re-order evidence in the bundle (v1 limitation — evidence is grouped by pillar in a fixed order).
 - Does not include a multi-supplier bundle flow (v1 single-supplier only).

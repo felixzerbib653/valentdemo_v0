@@ -156,7 +156,7 @@ Agentic surfaces audit (docs/70-agentic-surfaces.md):
 - Surface #1 (extraction provenance): present on EvidenceRow + audit bundle check rows. Amber tint below 75% confidence. pass.
 - Surface #2 (auto-assembled audit bundle): pre-selection + header sentence render, but copy is `{N} across {M} of 7` vs spec `{N} across 7`. partial.
 - Surface #3 (proactive flag generation + suggested remediation): deriveFlags in flags.js emits a pillar-keyed flag for every non-pass status (except onboarding suppress). `suggestedRemediation` copy is operator-voice with action keys. Rendered with a `Drafted by Valent` ProvenanceChip band in FlagRow. pass.
-- Surface #4 (supplier chase drafts): ChaseDraftModal builds pillar-specific subject + body, renders `Drafted by Valent` in the footer, simulated send emits ok toast. Wiring is complete in FlagRow but missing in TodaysWorkCard. partial.
+- Surface #4 (supplier chase drafts): ChaseDraftModal builds pillar-specific subject + body, renders `Drafted by Valent` in the footer, and send emits an ok toast. Wiring is complete in FlagRow but missing in TodaysWorkCard. partial.
 - Surface #5 (forward-looking monitoring alerts): MonitoringAlertDropdown anchored to TopBar pulse, three categories (expiring / aging / new awaiting review), getMonitoringAlerts(lastScanAt) buckets by windowDays=30 / thresholdDays=180. Escape + click-outside + route-change close work. pass.
 - Surface #6 (trust score provenance): SupplierHeader renders `Computed by Valent` chip with `trustScoreComputedAt` timestamp. pass.
 - Surface #7 (Today's Work ranked list): TodaysWorkCard with `Ranked by Valent` chip in header. Six hand-written items in rank order. Pitch-grade. One critical miss: CTA routing (see Surface #4 above). partial.
@@ -243,7 +243,7 @@ Pass 3 pitch signal: **very strong**. Today's Work + Trust Grid on landing answe
 Pass 1 conformance: **pass**
 Pass 1 defects:
 - None blocking. PillarList sort correct. Open-in-Review-Queue ghost link renders under every fail/pending row with proper hover + focus ring. `EvidencePanel` empty-state router branches correctly across four cases.
-- Minor: SupplierHeader "More" menu now emits an info toast ("Archive, export CSV, suspend scanning — (simulated)") instead of being inert — a genuine improvement on Round 1's "dead affordance" note. The same is not echoed in AuditBundleModal header, but the PRD does not spec one there, so this is deliberate.
+- Minor: SupplierHeader "More" menu now emits an info toast ("Archive, export CSV, suspend scanning") instead of being inert — a genuine improvement on Round 1's "dead affordance" note. The same is not echoed in AuditBundleModal header, but the PRD does not spec one there, so this is deliberate.
 - ActivityPanel "Compose email" + "Open in CRM" still emit only toasts and carry no ProvenanceChip. Round 1 flagged this; it remains unfixed, but the PRD doesn't require a chip on these actions (surface #4 scope is chase-drafts, not CRM). Marking not-a-defect in Round 2.
 
 Pass 2 journey (J2 — Thursday bundle to L'Oréal):

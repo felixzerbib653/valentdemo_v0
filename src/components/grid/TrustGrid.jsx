@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Search, Filter as FilterIcon, ChevronDown, Clock } from 'lucide-react';
-import { SUPPLIERS } from '../../data/suppliers.js';
+import { SUPPLIERS, applyBasfDemoInboundEvidence } from '../../data/suppliers.js';
 import { DOCUMENTS } from '../../data/documents.js';
 import { STATUS_ORDER } from '../../data/trustPillars.js';
 import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
@@ -89,19 +89,35 @@ function sortSuppliers(list) {
 }
 
 export default function TrustGrid() {
-  const { lastScanAt, now } = useTrust();
+  const { lastScanAt, now, basfDemoInboundEvidence } = useTrust();
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
 
+  const suppliersLive = useMemo(
+    () =>
+      SUPPLIERS.map((s) =>
+        s.id === 'sup-basf'
+          ? applyBasfDemoInboundEvidence(s, basfDemoInboundEvidence)
+          : s
+      ),
+    [basfDemoInboundEvidence]
+  );
+
   const countsByStatus = useMemo(() => {
-    const c = { all: SUPPLIERS.length, blocked: 0, watch: 0, ready: 0, onboarding: 0 };
-    for (const s of SUPPLIERS) c[s.status] = (c[s.status] || 0) + 1;
+    const c = {
+      all: suppliersLive.length,
+      blocked: 0,
+      watch: 0,
+      ready: 0,
+      onboarding: 0,
+    };
+    for (const s of suppliersLive) c[s.status] = (c[s.status] || 0) + 1;
     return c;
-  }, []);
+  }, [suppliersLive]);
 
   const visible = useMemo(
-    () => sortSuppliers(applyFilter(SUPPLIERS, filter, query)),
-    [filter, query]
+    () => sortSuppliers(applyFilter(suppliersLive, filter, query)),
+    [suppliersLive, filter, query]
   );
 
   const nextDeadline = useMemo(

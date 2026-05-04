@@ -235,12 +235,14 @@ export default function DocumentPreview({ doc, onClose }) {
 }
 
 function PersonaPaper({ doc, persona, supplier, pillar }) {
+  const [assetFailed, setAssetFailed] = useState(false);
   const visual = persona.visual || {};
   const paperBg = {
     'paper-0': '#FFFFFF',
     'paper-50': '#F8F9FB',
     'paper-100': '#F1F3F7',
   }[visual.paperTint] || '#FFFFFF';
+  const showPreviewImage = doc.previewImage && !assetFailed;
 
   return (
     <div className="relative flex min-h-0 flex-col bg-paper-100 p-6">
@@ -263,46 +265,60 @@ function PersonaPaper({ doc, persona, supplier, pillar }) {
         className="relative flex-1 overflow-hidden rounded-lg border border-paper-300 shadow-sm"
         style={{ backgroundColor: paperBg }}
       >
-        <GrainOverlay grain={visual.grain} />
-        <WatermarkOverlay watermark={visual.watermark} />
-
-        <div className="relative h-full overflow-y-auto px-10 py-10">
-          <div className="mx-auto max-w-[560px]">
-            <div className="mb-6 border-b border-paper-300 pb-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">
-                {supplier ? supplier.name : 'Unknown supplier'}
-              </div>
-              <h3 className="mt-1 text-xl font-semibold text-ink-900">{doc.title}</h3>
-              {pillar ? (
-                <p className="mt-1 text-xs text-ink-500">
-                  {pillar.fullLabel}
-                </p>
-              ) : null}
-            </div>
-
-            <MockDocumentBody doc={doc} pillar={pillar} supplier={supplier} />
-
-            {visual.annotation === 'pen-blue' ? (
-              <p
-                className="mt-6 text-sm"
-                style={{
-                  color: '#1E3A8A',
-                  fontFamily: '"Caveat", "Comic Sans MS", cursive',
-                  transform: 'rotate(-1.5deg)',
-                }}
-              >
-                ✓ reviewed – DH, 2026-03
-              </p>
-            ) : null}
-
-            {visual.annotation === 'redaction-bars' ? (
-              <div className="mt-6 space-y-1">
-                <span className="block h-3 w-40 bg-ink-900" />
-                <span className="block h-3 w-64 bg-ink-900" />
-              </div>
-            ) : null}
+        {showPreviewImage ? (
+          <div className="relative h-full overflow-auto bg-paper-100 px-6 py-6">
+            <img
+              src={doc.previewImage}
+              alt={`${doc.title} preview`}
+              className="mx-auto block max-h-none w-full max-w-[640px] rounded-sm bg-paper-0 shadow-md"
+              loading="eager"
+              onError={() => setAssetFailed(true)}
+            />
           </div>
-        </div>
+        ) : (
+          <>
+            <GrainOverlay grain={visual.grain} />
+            <WatermarkOverlay watermark={visual.watermark} />
+
+            <div className="relative h-full overflow-y-auto px-10 py-10">
+              <div className="mx-auto max-w-[560px]">
+                <div className="mb-6 border-b border-paper-300 pb-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">
+                    {supplier ? supplier.name : 'Unknown supplier'}
+                  </div>
+                  <h3 className="mt-1 text-xl font-semibold text-ink-900">{doc.title}</h3>
+                  {pillar ? (
+                    <p className="mt-1 text-xs text-ink-500">
+                      {pillar.fullLabel}
+                    </p>
+                  ) : null}
+                </div>
+
+                <MockDocumentBody doc={doc} pillar={pillar} supplier={supplier} />
+
+                {visual.annotation === 'pen-blue' ? (
+                  <p
+                    className="mt-6 text-sm"
+                    style={{
+                      color: '#1E3A8A',
+                      fontFamily: '"Caveat", "Comic Sans MS", cursive',
+                      transform: 'rotate(-1.5deg)',
+                    }}
+                  >
+                    ✓ reviewed – DH, 2026-03
+                  </p>
+                ) : null}
+
+                {visual.annotation === 'redaction-bars' ? (
+                  <div className="mt-6 space-y-1">
+                    <span className="block h-3 w-40 bg-ink-900" />
+                    <span className="block h-3 w-64 bg-ink-900" />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

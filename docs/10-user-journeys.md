@@ -14,7 +14,7 @@ Three personas. Sarah (Compliance Ops, primary) drives every UI decision. Gary (
 2. Scans the blocked rows. For each, the pillar chips on the row tell her *why* (e.g., "FEI missing," "COA expired 2d").
 3. Clicks the worst offender — supplier with two failing pillars and stale evidence. Lands on Supplier Detail.
 4. Detail shows trust score ring at 49, status `Blocked`, pillar list with two red pillars at the top (FEI registration, documentation freshness).
-5. Clicks the "FEI registration" pillar → evidence panel shows "no FEI on file." Clicks "Request from supplier" → emits a toast: "Draft email opened in Outlook (simulated)." In the demo this is a no-op toast; in production it would open a templated compose window.
+5. Clicks the "FEI registration" pillar → evidence panel shows "no FEI on file." Clicks "Request from supplier" → emits a toast: "Draft email opened in Outlook." In the demo this is a no-op toast; in production it would open a templated compose window.
 6. Clicks back to Trust Grid. Supplier row is still highlighted. She moves to the next blocked supplier.
 
 **What success feels like.** Sarah spent two minutes to know exactly which three suppliers need her attention and has initiated the first chase. No screen required her to read a KPI tile or parse a chart.
@@ -45,7 +45,7 @@ Three personas. Sarah (Compliance Ops, primary) drives every UI decision. Gary (
 
 1. Clicks the toast. Navigates to BASF supplier detail, scrolled to the Allergen pillar.
 2. Sees the expired document, the date of expiration, and the most recent contact log with this supplier.
-3. Clicks "Request update." Toast: "Compose window opened (simulated)."
+3. Clicks "Request update." Toast: "Compose window opened."
 
 **What success feels like.** She handled the new flag without losing what she was doing before — the toast is an interrupt, not a context switch.
 

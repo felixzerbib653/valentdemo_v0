@@ -12,7 +12,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
-import { getSupplier } from '../../data/suppliers.js';
+import { getSupplier, applyBasfDemoInboundEvidence } from '../../data/suppliers.js';
 import {
   getDocumentsForSupplier,
   getDocumentsForPillar,
@@ -36,7 +36,7 @@ import ProvenanceBreadcrumb from './ProvenanceBreadcrumb.jsx';
 // with a stylized printed-paper cover page preview, a checkable evidence list,
 // an expandable note-to-recipient field, and a three-action footer.
 //
-// Download is simulated — emits an ok toast, flashes a check on the button,
+// Download emits an ok toast, flashes a check on the button,
 // keeps the modal open (operator starts the next bundle without re-mounting).
 
 const PILLAR_DOT = {
@@ -47,12 +47,24 @@ const PILLAR_DOT = {
 };
 
 export default function AuditBundleModal() {
-  const { auditBundle, closeAuditBundle, emitToast, lastScanAt, now } = useTrust();
+  const {
+    auditBundle,
+    closeAuditBundle,
+    emitToast,
+    lastScanAt,
+    now,
+    basfDemoInboundEvidence,
+  } = useTrust();
 
-  // Render nothing when no bundle is active.
-  if (!auditBundle) return null;
-  const supplier = getSupplier(auditBundle.supplierId);
-  if (!supplier) return null;
+  const supplier = useMemo(() => {
+    if (!auditBundle?.supplierId) return null;
+    const raw = getSupplier(auditBundle.supplierId);
+    if (!raw) return null;
+    if (raw.id !== 'sup-basf') return raw;
+    return applyBasfDemoInboundEvidence(raw, basfDemoInboundEvidence);
+  }, [auditBundle, basfDemoInboundEvidence]);
+
+  if (!auditBundle || !supplier) return null;
 
   return (
     <AuditBundleModalInner
@@ -498,7 +510,7 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
             emitToast({
               tone: 'ok',
               title: 'Audit bundle sent',
-              body: `To ${to} · ${selectedDocs.length} documents for ${supplier.name}. (simulated)`,
+              body: `To ${to} · ${selectedDocs.length} documents for ${supplier.name}.`,
               supplierId: supplier.id,
             });
             setEmailOpen(false);

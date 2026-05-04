@@ -80,7 +80,7 @@ Proposed `flags.js` shape:
 
 ## Actions
 
-- **Resolve.** Marks the flag resolved (simulated — toggles local state). Toast confirms.
+- **Resolve.** Marks the flag resolved in local state. Toast confirms.
 - **Route.** Opens a small popover with team options ("Route to Procurement", "Route to Quality", "Route to Legal"). Selecting one emits a toast and marks the flag as routed.
 - **Open supplier.** Navigates to Supplier Detail with the pillar pre-selected.
 

@@ -35,7 +35,7 @@ const ASSIGNEES = [
 
 const PILLAR_TITLE = {
   fei: {
-    fail: 'FEI registration invalid',
+    fail: 'FEI registration expired',
     missing: 'FEI registration missing',
     pending: 'FEI verification pending',
   },
@@ -235,6 +235,16 @@ export function getFlag(flagId) {
 
 export function getFlagsForSupplier(supplierId) {
   return FLAGS.filter((f) => f.supplierId === supplierId);
+}
+
+// Review Queue / counts: hide BASF pillar flags once demo "inbound evidence" fired.
+export function filterFlagsForDemoSession(flags, basfInbound) {
+  if (!basfInbound) return flags;
+  return flags.filter((f) => {
+    if (f.id === 'flag-sup-basf-allergen' && basfInbound.allergen) return false;
+    if (f.id === 'flag-sup-basf-fei' && basfInbound.fei) return false;
+    return true;
+  });
 }
 
 export function getFlagCounts() {

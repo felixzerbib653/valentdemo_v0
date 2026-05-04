@@ -31,7 +31,7 @@ export default function SupplierHeader({ supplier }) {
     emitToast({
       tone: 'info',
       title: 'Compose window opened in Outlook',
-      body: `Template drafted for ${supplier.primaryContact?.name || 'supplier contact'}. (simulated)`,
+      body: `Template drafted for ${supplier.primaryContact?.name || 'supplier contact'}.`,
       supplierId: supplier.id,
     });
 
@@ -121,7 +121,7 @@ export default function SupplierHeader({ supplier }) {
                 emitToast({
                   tone: 'info',
                   title: 'More actions menu',
-                  body: 'Archive, export CSV, suspend scanning — (simulated)',
+                  body: 'Archive, export CSV, suspend scanning',
                   supplierId: supplier.id,
                 })
               }

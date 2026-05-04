@@ -7,7 +7,7 @@
 // Pillar key: must be a valid PillarKey from src/data/trustPillars.js.
 
 export const DOCUMENTS = [
-  // ─── BASF Personal Care (5 linked) ───────────────────────────────────────
+  // ─── BASF Personal Care (6 linked) ───────────────────────────────────────
   {
     id: 'doc-basf-001',
     title: 'Cosmetic product listing · §607 acknowledgment',
@@ -22,6 +22,8 @@ export const DOCUMENTS = [
     persona: 'clean-digital',
     fileType: 'pdf',
     pages: 2,
+    previewImage: '/demo-documents/basf-cosmetic-product-listing-607.png',
+    extractionScore: 97,
     validityEndsAt: '2027-04-03T00:00:00.000Z',
   },
   {
@@ -32,12 +34,14 @@ export const DOCUMENTS = [
     source: 'sharepoint',
     sourceDetail: '/Compliance/Suppliers/BASF/Safety/',
     ingestedAt: '2026-02-18T09:45:00.000Z',
-    extractionConfidence: 'medium',
+    extractionConfidence: 'high',
     linkStatus: 'linked',
     flags: [],
-    persona: 'photocopy',
+    persona: 'clean-digital',
     fileType: 'pdf',
-    pages: 14,
+    pages: 1,
+    previewImage: '/demo-documents/basf-safety-avobenzone-609.png',
+    extractionScore: 95,
     validityEndsAt: '2027-02-18T00:00:00.000Z',
   },
   {
@@ -54,6 +58,8 @@ export const DOCUMENTS = [
     persona: 'clean-digital',
     fileType: 'pdf',
     pages: 3,
+    previewImage: '/demo-documents/basf-allergen-nut-oil-expired.png',
+    extractionScore: 94,
     validityEndsAt: '2026-03-09T00:00:00.000Z',
   },
   {
@@ -64,12 +70,14 @@ export const DOCUMENTS = [
     source: 'email',
     sourceDetail: 'm.kessler@basf-personal-care.example',
     ingestedAt: '2025-12-11T16:02:00.000Z',
-    extractionConfidence: 'medium',
+    extractionConfidence: 'high',
     linkStatus: 'linked',
     flags: [],
-    persona: 'scan-light',
+    persona: 'clean-digital',
     fileType: 'pdf',
-    pages: 2,
+    pages: 1,
+    previewImage: '/demo-documents/basf-origin-glyceryl-stearate.png',
+    extractionScore: 93,
     validityEndsAt: '2026-12-11T00:00:00.000Z',
   },
   {
@@ -80,13 +88,33 @@ export const DOCUMENTS = [
     source: 'email',
     sourceDetail: 'coa-bot@basf-personal-care.example',
     ingestedAt: '2026-03-30T07:30:00.000Z',
-    extractionConfidence: 'low',
+    extractionConfidence: 'high',
     linkStatus: 'linked',
-    flags: ['spec floor borderline', 'review recommended'],
-    persona: 'faxed',
+    flags: [],
+    persona: 'clean-digital',
     fileType: 'pdf',
-    pages: 4,
+    pages: 1,
+    previewImage: '/demo-documents/basf-coa-phenoxyethanol-25-114.png',
+    extractionScore: 96,
     validityEndsAt: '2026-09-30T00:00:00.000Z',
+  },
+  {
+    id: 'doc-basf-006',
+    title: 'FEI registration confirmation · Houston TX',
+    supplierId: 'sup-basf',
+    pillarKey: 'fei',
+    source: 'sharepoint',
+    sourceDetail: '/Compliance/Suppliers/BASF/Registrations/',
+    ingestedAt: '2026-01-09T10:18:00.000Z',
+    extractionConfidence: 'high',
+    linkStatus: 'linked',
+    flags: ['renewal date passed'],
+    persona: 'clean-digital',
+    fileType: 'pdf',
+    pages: 1,
+    previewImage: '/demo-documents/basf-fei-houston-606.png',
+    extractionScore: 97,
+    validityEndsAt: '2025-12-31T00:00:00.000Z',
   },
 
   // ─── Univar Solutions Cosmetics (4) ──────────────────────────────────────
@@ -196,12 +224,14 @@ export const DOCUMENTS = [
     source: 'email',
     sourceDetail: 'coa@stepan.example',
     ingestedAt: '2026-04-18T13:50:00.000Z',
-    extractionConfidence: 'high',
+    extractionConfidence: 'medium',
     linkStatus: 'linked',
     flags: ['spec floor failed', 'blocks shipment'],
-    persona: 'clean-digital',
+    persona: 'photocopy',
     fileType: 'pdf',
-    pages: 3,
+    pages: 1,
+    previewImage: '/demo-documents/stepan-coa-capb-24-118.png',
+    extractionScore: 81,
     validityEndsAt: '2026-10-18T00:00:00.000Z',
   },
 
@@ -267,7 +297,9 @@ export const DOCUMENTS = [
     flags: ['partial refresh — 3 of 7 lines updated'],
     persona: 'handwritten',
     fileType: 'pdf',
-    pages: 5,
+    pages: 1,
+    previewImage: '/demo-documents/imcd-allergen-partial-handwritten.png',
+    extractionScore: 87,
     validityEndsAt: null,
   },
 
@@ -433,7 +465,9 @@ export const DOCUMENTS = [
     flags: ['supplier-side review in progress'],
     persona: 'handwritten',
     fileType: 'pdf',
-    pages: 12,
+    pages: 1,
+    previewImage: '/demo-documents/givaudan-safety-under-review-609.png',
+    extractionScore: 78,
     validityEndsAt: null,
   },
 
@@ -748,12 +782,14 @@ export const DOCUMENTS = [
     source: 'email',
     sourceDetail: 'auto-forward@acmecosmetics.example',
     ingestedAt: '2026-04-20T12:58:00.000Z',
-    extractionConfidence: 'medium',
+    extractionConfidence: 'low',
     linkStatus: 'needs-review',
     flags: ['supplier could not be matched', 'lecithin — candidate Croda'],
-    persona: 'photocopy',
+    persona: 'faxed',
     fileType: 'pdf',
-    pages: 2,
+    pages: 1,
+    previewImage: '/demo-documents/faxed-coa-lec-soy-70.png',
+    extractionScore: 65,
     validityEndsAt: null,
   },
   {
@@ -873,7 +909,10 @@ function buildExtraction(doc) {
   const bucket = doc.extractionConfidence || 'medium';
   const base = EXTRACTION_BASE_BY_BUCKET[bucket] ?? 80;
   const jitter = hashDocId(doc.id) % 7;
-  const confidence = Math.min(98, base + jitter);
+  const confidence =
+    typeof doc.extractionScore === 'number'
+      ? doc.extractionScore
+      : Math.min(98, base + jitter);
   return {
     extractedBy: 'valent',
     extractedAt: doc.ingestedAt,
@@ -913,9 +952,14 @@ const DOCUMENT_SUMMARIES = {
     nextStep: 'Chase Maria Kessler for the refreshed §609-compliant allergen statement.',
   },
   'doc-basf-005': {
-    contents: 'COA for Phenoxyethanol lot 25-114 — identity confirmed, purity reading sits at the lower spec bound.',
-    gap: 'Purity value is within tolerance but borderline against internal spec floor.',
-    nextStep: 'Route to Rachel (QA) for a judgment call before accepting the lot.',
+    contents: 'COA for Phenoxyethanol lot 25-114 — identity, expiry, purity, heavy metals, and microbial checks all pass.',
+    gap: null,
+    nextStep: 'No action required. Lot evidence is ready for the next audit bundle.',
+  },
+  'doc-basf-006': {
+    contents: '§606 FEI registration confirmation for BASF Personal Care Houston, extracted cleanly from the FDA letter.',
+    gap: 'The renewal date on the document has passed; a refreshed registration confirmation is needed.',
+    nextStep: 'Chase Mara Kessler for the renewed §606 registration confirmation.',
   },
 
   // Stepan — demo's "blocker" showcase
