@@ -43,9 +43,14 @@ function Placeholder({ heading, subtitle, children }) {
 function LockedPlaceholder({ label, tagline, bodyLabel }) {
   return (
     <LockedPageShell label={label} tagline={tagline}>
-      <Placeholder heading={bodyLabel || label}>
-        <p>Gated surface. Blurred in demo.</p>
-      </Placeholder>
+      <section className="mx-auto w-full max-w-[1280px] px-12 py-10">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="h-28 rounded-lg border border-paper-300 bg-paper-0" />
+          <div className="h-28 rounded-lg border border-paper-300 bg-paper-0" />
+          <div className="h-28 rounded-lg border border-paper-300 bg-paper-0" />
+        </div>
+        <div className="mt-5 h-80 rounded-lg border border-paper-300 bg-paper-0" />
+      </section>
     </LockedPageShell>
   );
 }
@@ -69,7 +74,11 @@ function PageSwitch() {
       return <ReviewQueue />;
     case 'admin':
       return (
-        <LockedPageShell label="Admin · Adoption" tagline={ADMIN_TAGLINE}>
+        <LockedPageShell
+          label="Admin · Adoption"
+          tagline={ADMIN_TAGLINE}
+          statusLabel="Contract preview"
+        >
           <AdminAdoption />
         </LockedPageShell>
       );
@@ -113,7 +122,7 @@ function PageSwitch() {
 function WedgeRoadmapStrip() {
   return (
     <div
-      aria-hidden="true"
+      role="note"
       className="border-t border-paper-200 bg-paper-50 px-12 py-2 text-center"
     >
       <span className="text-[11px] text-ink-500">

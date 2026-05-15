@@ -16,7 +16,7 @@ import { SUPPLIERS } from '../data/suppliers.js';
 
 const MIN_SCORE = 10;
 
-function scoreSupplier(s, q) {
+export function scoreSupplier(s, q) {
   if (!q) return 0;
   const qLower = q.toLowerCase();
   const name = (s.name || '').toLowerCase();
@@ -46,11 +46,11 @@ function extractMatch(s, q) {
 }
 
 export default function useSupplierSearch(query, options = {}) {
-  const { limit = 6 } = options;
+  const { limit = 6, suppliers = SUPPLIERS } = options;
   return useMemo(() => {
     const q = (query || '').trim();
-    if (!q) return [];
-    const ranked = SUPPLIERS
+    if (!q) return { results: [], total: 0, capped: false };
+    const ranked = suppliers
       .map((s) => {
         const score = scoreSupplier(s, q);
         if (score < MIN_SCORE) return null;
@@ -65,6 +65,11 @@ export default function useSupplierSearch(query, options = {}) {
         if (b.score !== a.score) return b.score - a.score;
         return (a.supplier.name || '').localeCompare(b.supplier.name || '');
       });
-    return ranked.slice(0, limit);
-  }, [query, limit]);
+    const results = ranked.slice(0, limit);
+    return {
+      results,
+      total: ranked.length,
+      capped: ranked.length > results.length,
+    };
+  }, [query, limit, suppliers]);
 }

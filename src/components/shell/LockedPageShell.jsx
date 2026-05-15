@@ -6,7 +6,12 @@ import { Lock } from 'lucide-react';
 // plate, mirroring the v3 treatment. Children are the blurred content —
 // they're rendered (for visual structure) but pointer-events are disabled.
 
-export default function LockedPageShell({ label, tagline, children }) {
+export default function LockedPageShell({
+  label,
+  tagline,
+  statusLabel = 'Coming soon',
+  children,
+}) {
   return (
     <div className="relative h-full w-full overflow-hidden">
       {/* Blurred content behind the plate */}
@@ -24,7 +29,7 @@ export default function LockedPageShell({ label, tagline, children }) {
             <Lock size={18} strokeWidth={2.25} />
           </span>
           <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">
-            Coming soon
+            {statusLabel}
           </div>
           <div className="text-xl font-semibold text-ink-900">{label}</div>
           {tagline && <p className="text-sm text-ink-600">{tagline}</p>}

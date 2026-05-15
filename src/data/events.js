@@ -20,7 +20,7 @@ export const EVENTS = [
     at: '2026-04-20T11:42:00.000Z',
     tone: 'block',
     title: 'Allergen declaration expired',
-    body: 'Nut-oil blend statement dated 2024-10-20 exceeded its validity window. Pillar moved to fail.',
+    body: 'Nut-oil blend statement issued 2025-03-09 exceeded its validity window. Pillar moved to fail.',
   },
   {
     id: 'evt-002',
@@ -65,7 +65,7 @@ export const EVENTS = [
     at: '2026-04-18T14:00:00.000Z',
     tone: 'block',
     title: 'Purity failed · CAPB lot 24-118',
-    body: 'Most recent COA shows spec floor failure. Lot is under shipping hold.',
+    body: 'COA below acceptance criterion — lot on QA hold pending NC/OOS investigation, traceability check, and formal disposition.',
   },
   {
     id: 'evt-007',
@@ -195,7 +195,7 @@ export const EVENTS = [
     at: '2026-04-07T19:12:00.000Z',
     tone: 'block',
     title: 'FEI registration lapsed',
-    body: 'Düsseldorf facility FEI expired. Pillar moved to missing pending re-registration.',
+    body: 'Düsseldorf facility FEI expired. Pillar moved to fail pending re-registration.',
   },
 ];
 

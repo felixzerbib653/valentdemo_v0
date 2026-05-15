@@ -88,6 +88,9 @@ export default function DocumentPreview({ doc, onClose }) {
   const review = documentReviews ? documentReviews.get(doc.id) : null;
   const isReviewable =
     doc.linkStatus === 'needs-review' || doc.linkStatus === 'failed';
+  const canActOnGap =
+    Boolean(supplier) &&
+    ((doc.flags && doc.flags.length > 0) || Boolean(doc.summary?.gap));
 
   return (
     <div
@@ -137,8 +140,7 @@ export default function DocumentPreview({ doc, onClose }) {
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             <AgentSummaryBlock doc={doc} />
 
-            {(doc.flags && doc.flags.length > 0) ||
-            (doc.summary && doc.summary.nextStep) ? (
+            {canActOnGap ? (
               <ActOnGapRow
                 doc={doc}
                 supplier={supplier}
@@ -177,6 +179,7 @@ export default function DocumentPreview({ doc, onClose }) {
                 doc={doc}
                 review={review}
                 now={now}
+                allowApprove={doc.linkStatus !== 'failed'}
                 onReview={(action, note) => {
                   emitDocumentReview(doc.id, action, note);
                   const meta = REVIEW_ACTION_META[action];
@@ -531,7 +534,7 @@ function SummaryRow({ label, value, tone, last }) {
   );
 }
 
-function ReviewControls({ doc, review, now, onReview, onUndo }) {
+function ReviewControls({ doc, review, now, allowApprove = true, onReview, onUndo }) {
   const [mode, setMode] = useState(null); // null | 'reject' | 'request-reextraction'
   const [note, setNote] = useState('');
 
@@ -626,20 +629,22 @@ function ReviewControls({ doc, review, now, onReview, onUndo }) {
     <div className="mt-5 rounded-lg border border-paper-300 bg-paper-0 px-3 py-2.5">
       <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
         <Sparkles size={11} strokeWidth={2.25} className="text-accent" />
-        Feedback to Valent
+        Review required
       </div>
       <p className="mb-2.5 text-[11px] leading-snug text-ink-500">
-        Train the agent by confirming or correcting this extraction.
+        Confirm the extracted fields or send the document back for correction.
       </p>
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onReview('approve-link', '')}
-          className="inline-flex items-center gap-1 rounded-md border border-ink-900 bg-ink-900 px-2.5 py-1 text-xs font-semibold text-paper-0 transition-colors hover:bg-ink-800 focus:outline-none focus-visible:shadow-focus"
-        >
-          <CheckCircle2 size={12} strokeWidth={2.25} />
-          Approve &amp; link
-        </button>
+        {allowApprove ? (
+          <button
+            type="button"
+            onClick={() => onReview('approve-link', '')}
+            className="inline-flex items-center gap-1 rounded-md border border-ink-900 bg-ink-900 px-2.5 py-1 text-xs font-semibold text-paper-0 transition-colors hover:bg-ink-800 focus:outline-none focus-visible:shadow-focus"
+          >
+            <CheckCircle2 size={12} strokeWidth={2.25} />
+            Approve &amp; link
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => setMode('request-reextraction')}

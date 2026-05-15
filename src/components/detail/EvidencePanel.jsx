@@ -6,6 +6,7 @@ import { PILLARS } from '../../data/trustPillars.js';
 import {
   getDocumentsForSupplier,
   getDocumentsForPillar,
+  applyBasfDemoDocumentOverrides,
 } from '../../data/documents.js';
 import { useTrust } from '../../context/TrustContext.jsx';
 
@@ -58,15 +59,7 @@ export default function EvidencePanel({ supplier }) {
       list = getDocumentsForSupplier(supplier.id);
     }
     if (supplier.id !== 'sup-basf') return list;
-    return list.map((d) => {
-      if (d.id === 'doc-basf-003' && basfDemoInboundEvidence.allergen) {
-        return { ...d, flags: [] };
-      }
-      if (d.id === 'doc-basf-006' && basfDemoInboundEvidence.fei) {
-        return { ...d, flags: [] };
-      }
-      return d;
-    });
+    return applyBasfDemoDocumentOverrides(list, basfDemoInboundEvidence);
   }, [supplier.id, activePillarKey, basfDemoInboundEvidence]);
 
   const pillar = activePillarKey ? PILLARS[activePillarKey] : null;

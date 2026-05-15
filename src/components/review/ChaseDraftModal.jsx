@@ -72,18 +72,36 @@ function firstNameOf(fullName) {
   return fullName.trim().split(/\s+/)[0];
 }
 
-function buildDraft(flag, supplier) {
-  const pillar = flag?.pillarKey ? PILLARS[flag.pillarKey] : null;
-  const ask = flag?.pillarKey ? PILLAR_ASK[flag.pillarKey] : null;
-
-  const deadlineDate = new Date(Date.now() + DRAFT_DEADLINE_DAYS * 86400000);
+function buildDraft(flag, supplier, nowMs) {
+  const baseMs = Number.isFinite(nowMs) ? nowMs : Date.now();
+  const deadlineDate = new Date(baseMs + DRAFT_DEADLINE_DAYS * 86400000);
   const deadlineLabel = formatShortDate(deadlineDate);
-
-  const subjectTopic = ask?.subjectTopic || pillar?.label || 'compliance evidence';
-  const subject = `Request: current ${subjectTopic} — due ${deadlineLabel}`;
 
   const to = supplier?.primaryContact?.email || '';
   const contactFirst = firstNameOf(supplier?.primaryContact?.name);
+
+  // Stepan · CAPB lot 24-118 — supplier-quality chase for OOS COA (NC/OOS path),
+  // not a routine evidence refresh.
+  if (flag?.supplierId === 'sup-stepan' && flag?.pillarKey === 'purity') {
+    const subject = `CAPB lot 24-118 — investigation & replacement lot — reply by ${deadlineLabel}`;
+    const body =
+      `Hi ${contactFirst},\n\n` +
+      `We have opened a nonconformance on Cocamidopropyl Betaine (CAPB), supplier lot 24-118. ` +
+      `The COA you provided shows purity/active content below our agreed acceptance criterion; ` +
+      `the lot is on QA hold and blocked from production use pending disposition.\n\n` +
+      `Please send a written investigation for this lot covering batch record review, the analytical method used, original data, retain-sample retest where applicable, and proposed corrective action. ` +
+      `We cannot accept this lot under the current specification on the strength of a replacement COA alone unless you document a valid root cause such as a laboratory or transcription error with supporting evidence.\n\n` +
+      `Separately, we need your proposal on material handling: replacement lot, credit, or return authorization — whichever aligns with your quality agreement with us. ` +
+      `If anything material changed on method, specification references, grade, or releasing site for this SKU, include that in your reply. Please respond by ${deadlineLabel}.\n\n` +
+      `Thanks,\n${OPERATOR_NAME}`;
+    return { to, subject, body };
+  }
+
+  const pillar = flag?.pillarKey ? PILLARS[flag.pillarKey] : null;
+  const ask = flag?.pillarKey ? PILLAR_ASK[flag.pillarKey] : null;
+
+  const subjectTopic = ask?.subjectTopic || pillar?.label || 'compliance evidence';
+  const subject = `Request: current ${subjectTopic} — due ${deadlineLabel}`;
 
   const askLine =
     ask?.askNoun ||
@@ -105,6 +123,8 @@ export default function ChaseDraftModal() {
     closeChaseDraft,
     emitToast,
     startChaseSend,
+    now,
+    completeTodaysWorkForFlag,
   } = useTrust();
   if (!chaseDraft) return null;
 
@@ -136,6 +156,8 @@ export default function ChaseDraftModal() {
       onClose={closeChaseDraft}
       emitToast={emitToast}
       startChaseSend={startChaseSend}
+      now={now}
+      completeTodaysWorkForFlag={completeTodaysWorkForFlag}
     />
   );
 }
@@ -146,8 +168,10 @@ function ChaseDraftModalInner({
   onClose,
   emitToast,
   startChaseSend,
+  now,
+  completeTodaysWorkForFlag,
 }) {
-  const initial = useMemo(() => buildDraft(flag, supplier), [flag, supplier]);
+  const initial = useMemo(() => buildDraft(flag, supplier, now), [flag, supplier, now]);
   const [to, setTo] = useState(initial.to);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
@@ -171,6 +195,7 @@ function ChaseDraftModalInner({
       to: to.trim(),
       supplierId: supplier ? supplier.id : null,
     });
+    completeTodaysWorkForFlag?.(flag.id, 'chase-send');
     emitToast({
       tone: 'info',
       title: 'Sending chase email',

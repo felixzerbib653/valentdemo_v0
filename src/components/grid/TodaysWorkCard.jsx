@@ -14,6 +14,7 @@ import { TODAYS_WORK } from '../../data/todaysWork.js';
 import { SUPPLIERS_BY_ID } from '../../data/suppliers.js';
 import { useTrust } from '../../context/TrustContext.jsx';
 import ChaseSendStatus from '../shared/ChaseSendStatus.jsx';
+import ProvenanceChip from '../shared/ProvenanceChip.jsx';
 
 // TodaysWorkCard — Trust Grid hero.
 // Per docs/70-agentic-surfaces.md §Surface #7.
@@ -100,6 +101,7 @@ export default function TodaysWorkCard() {
     todaysWorkCompletions,
     completeTodaysWorkItem,
     chaseSendEvents,
+    now,
   } = useTrust();
   const items = TODAYS_WORK; // already authored in rank order
   const completedIds = useMemo(
@@ -229,6 +231,12 @@ export default function TodaysWorkCard() {
             )}
           </span>
         </div>
+        <ProvenanceChip
+          variant="ranked"
+          timestamp={items[0]?.rankedAt}
+          nowMs={now}
+          title="Ranked by Valent from deadlines, blockers, and supplier impact"
+        />
       </header>
 
       <ul role="list" className="divide-y divide-paper-200">

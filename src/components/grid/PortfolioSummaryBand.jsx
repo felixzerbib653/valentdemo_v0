@@ -15,9 +15,9 @@ import { useTrust } from '../../context/TrustContext.jsx';
 // already carried by the StatusPill on each supplier row and by the red
 // left-bar on blocked rows. One visual unit, ~120px tall.)
 
-export default function PortfolioSummaryBand() {
+export default function PortfolioSummaryBand({ suppliers }) {
   const { navigate, lastScanAt } = useTrust();
-  const summary = getPortfolioSummary();
+  const summary = getPortfolioSummary(suppliers);
   const freshness = getEvidenceFreshness(lastScanAt);
   const { portfolioScore, portfolioDeltaWeek } = summary;
 

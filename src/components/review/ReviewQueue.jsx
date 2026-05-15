@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, ChevronDown } from 'lucide-react';
-import { FLAGS, getFlagCounts, filterFlagsForDemoSession } from '../../data/flags.js';
+import { FLAGS, filterFlagsForDemoSession } from '../../data/flags.js';
 import { getSupplier, applyBasfDemoInboundEvidence } from '../../data/suppliers.js';
 import { STATUS_ORDER } from '../../data/trustPillars.js';
 import { useTrust } from '../../context/TrustContext.jsx';
@@ -97,7 +97,7 @@ export default function ReviewQueue() {
     ...DEFAULT_FILTERS,
     pillar: activePillarKey || 'all',
   }));
-  const [routedIds, setRoutedIds] = useState(() => new Set());
+  const [routedFlags, setRoutedFlags] = useState(() => new Map());
   // Groups default to collapsed — operator opens the portfolio view and sees
   // the shape of where the problems live (supplier, counts by severity)
   // before drilling into any one block. Tracked as an expanded-set so the
@@ -114,8 +114,6 @@ export default function ReviewQueue() {
     }
   }, [activePillarKey]);
 
-  const baseCounts = useMemo(() => getFlagCounts(), []);
-
   const sessionFlags = useMemo(
     () => filterFlagsForDemoSession(FLAGS, basfDemoInboundEvidence),
     [basfDemoInboundEvidence]
@@ -130,16 +128,20 @@ export default function ReviewQueue() {
   );
 
   const headerCounts = useMemo(() => {
-    const thisWeek = sessionFlags.filter((f) => {
+    const scopedFlags = activeSupplierId
+      ? sessionFlags.filter((f) => f.supplierId === activeSupplierId)
+      : sessionFlags;
+    const openFlags = scopedFlags.filter((f) => !resolutions.has(f.id));
+    const thisWeek = openFlags.filter((f) => {
       return now - new Date(f.openedAt).getTime() <= WEEK_MS;
     }).length;
     return {
       visibleOpen: visible.filter((f) => !resolutions.has(f.id)).length,
       thisWeek,
-      me: baseCounts.me,
-      unassigned: baseCounts.unassigned,
+      me: openFlags.filter((f) => f.assignee?.name === 'Sarah Chen').length,
+      unassigned: openFlags.filter((f) => !f.assignee).length,
     };
-  }, [visible, now, baseCounts, resolutions, sessionFlags]);
+  }, [visible, now, resolutions, sessionFlags, activeSupplierId]);
 
   const groups = useMemo(
     () => groupBySupplier(visible, basfDemoInboundEvidence),
@@ -147,10 +149,10 @@ export default function ReviewQueue() {
   );
   const groupingOn = !activeSupplierId;
 
-  const routeFlag = (flag) => {
-    setRoutedIds((prev) => {
-      const next = new Set(prev);
-      next.add(flag.id);
+  const routeFlag = (flag, team) => {
+    setRoutedFlags((prev) => {
+      const next = new Map(prev);
+      next.set(flag.id, team);
       return next;
     });
   };
@@ -165,7 +167,7 @@ export default function ReviewQueue() {
   };
 
   const clearScope = () => {
-    navigate('review'); // navigate without supplierId drops the scope
+    navigate('review', { supplierId: null, pillarKey: null });
   };
 
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
@@ -214,6 +216,7 @@ export default function ReviewQueue() {
                   collapsed={collapsed}
                   onToggle={() => toggleGroup(groupKey)}
                   onRoute={routeFlag}
+                  routedFlags={routedFlags}
                 />
               );
             })}
@@ -225,6 +228,7 @@ export default function ReviewQueue() {
                 key={f.id}
                 flag={f}
                 onRoute={routeFlag}
+                routedTeam={routedFlags.get(f.id)}
               />
             ))}
           </div>
@@ -234,7 +238,7 @@ export default function ReviewQueue() {
   );
 }
 
-function GroupBlock({ group, collapsed, onToggle, onRoute }) {
+function GroupBlock({ group, collapsed, onToggle, onRoute, routedFlags = new Map() }) {
   const { supplier, items } = group;
   const blockerCount = items.filter((f) => f.severity === 'blocker').length;
   const watchCount = items.filter((f) => f.severity === 'watch').length;
@@ -284,6 +288,7 @@ function GroupBlock({ group, collapsed, onToggle, onRoute }) {
               key={f.id}
               flag={f}
               onRoute={onRoute}
+              routedTeam={routedFlags.get(f.id)}
             />
           ))}
         </div>

@@ -7,6 +7,7 @@ import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
 import PortfolioSummaryBand from './PortfolioSummaryBand.jsx';
 import SupplierRow from './SupplierRow.jsx';
 import TodaysWorkCard from './TodaysWorkCard.jsx';
+import { scoreSupplier } from '../../hooks/useSupplierSearch.js';
 
 // MoCRA deadline ribbon — per docs/82-feature-mocra-deadline-surface.md
 // (collapsed scope). Computed from existing document.validityEndsAt fields
@@ -69,11 +70,7 @@ function applyFilter(list, filter, query) {
   if (query) {
     const q = query.trim().toLowerCase();
     if (q) {
-      out = out.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          (s.subtitle || '').toLowerCase().includes(q)
-      );
+      out = out.filter((s) => scoreSupplier(s, q) > 0);
     }
   }
   return out;
@@ -104,16 +101,17 @@ export default function TrustGrid() {
   );
 
   const countsByStatus = useMemo(() => {
+    const queryFiltered = applyFilter(suppliersLive, 'all', query);
     const c = {
-      all: suppliersLive.length,
+      all: queryFiltered.length,
       blocked: 0,
       watch: 0,
       ready: 0,
       onboarding: 0,
     };
-    for (const s of suppliersLive) c[s.status] = (c[s.status] || 0) + 1;
+    for (const s of queryFiltered) c[s.status] = (c[s.status] || 0) + 1;
     return c;
-  }, [suppliersLive]);
+  }, [suppliersLive, query]);
 
   const visible = useMemo(
     () => sortSuppliers(applyFilter(suppliersLive, filter, query)),
@@ -162,12 +160,14 @@ export default function TrustGrid() {
         </p>
       </header>
 
-      {/* 2. Portfolio summary band */}
-      <PortfolioSummaryBand />
-
-      {/* 3. Today's work — agentic hero surface. Surface #7 per docs/70-agentic-surfaces.md. */}
-      <div className="mt-4">
+      {/* 2. Today's work — agentic hero surface. Surface #7 per docs/70-agentic-surfaces.md. */}
+      <div>
         <TodaysWorkCard />
+      </div>
+
+      {/* 3. Portfolio summary band */}
+      <div className="mt-4">
+        <PortfolioSummaryBand suppliers={suppliersLive} />
       </div>
 
       {/* 4. Supplier-list toolbar — section label + search + filter. */}
@@ -202,7 +202,11 @@ export default function TrustGrid() {
         </div>
 
         {visible.length === 0 ? (
-          <EmptyState onClear={() => { setFilter('all'); setQuery(''); }} />
+          <EmptyState
+            filter={filter}
+            query={query}
+            onClear={() => { setFilter('all'); setQuery(''); }}
+          />
         ) : (
           <div role="list">
             {visible.map((supplier) => (
@@ -274,16 +278,31 @@ function FilterDropdown({ value, onChange, counts }) {
   );
 }
 
-function EmptyState({ onClear }) {
+function EmptyState({ filter, query, onClear }) {
+  const hasQuery = query.trim().length > 0;
+  const filterLabel =
+    FILTERS.find((f) => f.key === filter)?.label.toLowerCase() || 'filter';
+  const message =
+    hasQuery && filter !== 'all'
+      ? `No ${filterLabel} match "${query.trim()}".`
+      : hasQuery
+        ? `No suppliers match "${query.trim()}".`
+        : 'No suppliers match this filter.';
+  const actionLabel =
+    hasQuery && filter !== 'all'
+      ? 'Clear search and filter'
+      : hasQuery
+        ? 'Clear search'
+        : 'Clear filter';
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-      <p className="text-sm text-ink-700">No suppliers match this filter.</p>
+      <p className="text-sm text-ink-700">{message}</p>
       <button
         type="button"
         onClick={onClear}
         className="inline-flex items-center rounded-md border border-paper-300 bg-paper-0 px-3 py-1.5 text-sm font-medium text-ink-700 transition-colors hover:bg-paper-50 focus:outline-none focus-visible:shadow-focus"
       >
-        Clear filter
+        {actionLabel}
       </button>
     </div>
   );

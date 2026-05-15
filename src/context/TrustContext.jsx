@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { TODAYS_WORK } from '../data/todaysWork.js';
+import { DEMO_NOW } from '../data/suppliers.js';
 
 // Single app-wide context per docs/30-state-contract.md.
 // One provider owns all cross-screen concerns: navigation, active supplier/pillar,
@@ -26,6 +27,7 @@ const TOAST_DEDUPE_WINDOW_MS = 2000;
 const TOAST_MAX_VISIBLE = 3;
 const CHASE_SEND_MS = 2000;
 const CHASE_INBOUND_EVIDENCE_MS = 15 * 1000;
+const DEMO_NOW_MS = new Date(DEMO_NOW).getTime();
 
 const TODAYS_WORK_BY_FLAG_ID = new Map(
   TODAYS_WORK.filter((item) => item.flagId).map((item) => [item.flagId, item])
@@ -98,14 +100,30 @@ export function TrustProvider({ children }) {
     fei: false,
   }));
 
-  // Last-scan clock — initialized once, ticked every 60s for live display.
-  const [lastScanAt] = useState(() => new Date(Date.now() - LAST_SCAN_OFFSET_MS).toISOString());
-  const [now, setNow] = useState(() => Date.now());
+  // Last-scan clock — demo-fixture time, ticked every 60s for live display.
+  // Keeping all relative dates on the fixture clock prevents April seeded
+  // documents from aging into obviously stale "this week" counts.
+  const [lastScanAt] = useState(() =>
+    new Date(DEMO_NOW_MS - LAST_SCAN_OFFSET_MS).toISOString()
+  );
+  const [now, setNow] = useState(() => DEMO_NOW_MS);
+  const nowRef = useRef(DEMO_NOW_MS);
 
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), SCAN_TICK_MS);
+    const t = setInterval(() => {
+      setNow((prev) => {
+        const next = prev + SCAN_TICK_MS;
+        nowRef.current = next;
+        return next;
+      });
+    }, SCAN_TICK_MS);
     return () => clearInterval(t);
   }, []);
+
+  const currentDemoIso = useCallback(
+    () => new Date(nowRef.current).toISOString(),
+    []
+  );
 
   // Toast timers, keyed by toast id. Hover pauses; leave resumes.
   const toastTimers = useRef(new Map());
@@ -236,7 +254,7 @@ export function TrustProvider({ children }) {
   const startChaseSend = useCallback(
     (flagId, meta = {}) => {
       if (!flagId) return;
-      const startedAt = new Date().toISOString();
+      const startedAt = currentDemoIso();
       const existingTimer = chaseSendTimers.current.get(flagId);
       if (existingTimer) window.clearTimeout(existingTimer);
 
@@ -260,7 +278,7 @@ export function TrustProvider({ children }) {
           next.set(flagId, {
             ...current,
             status: 'sent',
-            sentAt: new Date().toISOString(),
+            sentAt: currentDemoIso(),
           });
           return next;
         });
@@ -280,7 +298,7 @@ export function TrustProvider({ children }) {
           chaseInboundTimers.current.delete(inboundKey);
           setBasfDemoInboundEvidence((prev) => {
             if (prev[inboundKey]) return prev;
-            return { ...prev, [inboundKey]: true };
+            return { ...prev, [inboundKey]: currentDemoIso() };
           });
           emitToast({
             tone: 'ok',
@@ -295,7 +313,7 @@ export function TrustProvider({ children }) {
         chaseInboundTimers.current.set(inboundKey, inboundTimer);
       }
     },
-    [emitToast]
+    [currentDemoIso, emitToast]
   );
 
   useEffect(() => {
@@ -315,13 +333,13 @@ export function TrustProvider({ children }) {
     setResolutions((prev) => {
       const next = new Map(prev);
       next.set(flagId, {
-        resolvedAt: new Date().toISOString(),
+        resolvedAt: currentDemoIso(),
         resolvedBy: 'Sarah Chen',
         note: trimmed || null,
       });
       return next;
     });
-  }, []);
+  }, [currentDemoIso]);
 
   const reopenFlag = useCallback((flagId) => {
     if (!flagId) return;
@@ -341,12 +359,12 @@ export function TrustProvider({ children }) {
       next.set(docId, {
         action,
         note: trimmed || null,
-        reviewedAt: new Date().toISOString(),
+        reviewedAt: currentDemoIso(),
         reviewedBy: 'Sarah Chen',
       });
       return next;
     });
-  }, []);
+  }, [currentDemoIso]);
 
   const clearDocumentReview = useCallback((docId) => {
     if (!docId) return;
@@ -365,14 +383,14 @@ export function TrustProvider({ children }) {
       if (prev.has(itemId)) return prev;
       const next = new Map(prev);
       next.set(itemId, {
-        completedAt: new Date().toISOString(),
+        completedAt: currentDemoIso(),
         source,
       });
       didComplete = true;
       return next;
     });
     return didComplete;
-  }, []);
+  }, [currentDemoIso]);
 
   const completeTodaysWorkForFlag = useCallback(
     (flagId, source = 'action') => {

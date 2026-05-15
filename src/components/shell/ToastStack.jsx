@@ -50,7 +50,7 @@ export default function ToastStack() {
     <div
       aria-live="polite"
       aria-label="Notifications"
-      className="pointer-events-none fixed right-6 top-6 z-50 flex w-[360px] flex-col gap-2"
+      className="pointer-events-none fixed right-6 top-20 z-50 flex w-[360px] flex-col gap-2"
     >
       {toasts.map((toast) => (
         <Toast

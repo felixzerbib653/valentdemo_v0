@@ -1,4 +1,4 @@
-// 48 evidence documents across the 14 suppliers, plus 4 unlinked records
+// 45 linked evidence documents across the 14 suppliers, plus 4 unlinked records
 // (3 needs-review, 1 failed-to-parse) that populate the Ingest Inbox filters.
 // Source mix: email (majority), sharepoint, sftp, manual. Personas cover the
 // full visual range from clean-digital through faxed.
@@ -22,7 +22,6 @@ export const DOCUMENTS = [
     persona: 'clean-digital',
     fileType: 'pdf',
     pages: 2,
-    previewImage: '/demo-documents/basf-cosmetic-product-listing-607.png',
     extractionScore: 97,
     validityEndsAt: '2027-04-03T00:00:00.000Z',
   },
@@ -51,7 +50,7 @@ export const DOCUMENTS = [
     pillarKey: 'allergen',
     source: 'email',
     sourceDetail: 'compliance@basf-personal-care.example',
-    ingestedAt: '2024-10-20T11:12:00.000Z',
+    ingestedAt: '2025-03-09T11:12:00.000Z',
     extractionConfidence: 'high',
     linkStatus: 'linked',
     flags: ['expired 42d ago', 'supersedes required'],
@@ -100,7 +99,7 @@ export const DOCUMENTS = [
   },
   {
     id: 'doc-basf-006',
-    title: 'FEI registration confirmation · Houston TX',
+    title: 'FEI registration confirmation · Düsseldorf facility',
     supplierId: 'sup-basf',
     pillarKey: 'fei',
     source: 'sharepoint',
@@ -232,7 +231,7 @@ export const DOCUMENTS = [
     pages: 1,
     previewImage: '/demo-documents/stepan-coa-capb-24-118.png',
     extractionScore: 81,
-    validityEndsAt: '2026-10-18T00:00:00.000Z',
+    validityEndsAt: '2026-10-28T00:00:00.000Z',
   },
 
   // ─── IMCD · Peter Greven (4) ─────────────────────────────────────────────
@@ -249,7 +248,7 @@ export const DOCUMENTS = [
     flags: [],
     persona: 'clean-digital',
     fileType: 'pdf',
-    pages: 1,
+    pages: 12,
     validityEndsAt: '2026-11-02T00:00:00.000Z',
   },
   {
@@ -465,7 +464,7 @@ export const DOCUMENTS = [
     flags: ['supplier-side review in progress'],
     persona: 'handwritten',
     fileType: 'pdf',
-    pages: 1,
+    pages: 12,
     previewImage: '/demo-documents/givaudan-safety-under-review-609.png',
     extractionScore: 78,
     validityEndsAt: null,
@@ -536,7 +535,7 @@ export const DOCUMENTS = [
     persona: 'clean-digital',
     fileType: 'pdf',
     pages: 1,
-    validityEndsAt: '2026-05-14T00:00:00.000Z',
+    validityEndsAt: '2027-05-14T00:00:00.000Z',
   },
   {
     id: 'doc-ashland-002',
@@ -947,9 +946,9 @@ const DOCUMENT_SUMMARIES = {
     nextStep: 'No action required. Renewal watchpoint set for Mar 2027.',
   },
   'doc-basf-003': {
-    contents: 'Allergen declaration for the nut-oil blend, last affirmed Oct 2024 and superseded by a 2026 ingredient list update.',
+    contents: 'Allergen declaration for the nut-oil blend, issued Mar 2025 and superseded by a 2026 ingredient list update.',
     gap: 'Declaration expired 42 days ago; superseded version not yet on file.',
-    nextStep: 'Chase Maria Kessler for the refreshed §609-compliant allergen statement.',
+    nextStep: 'Chase Mara Kessler for the refreshed allergen statement.',
   },
   'doc-basf-005': {
     contents: 'COA for Phenoxyethanol lot 25-114 — identity, expiry, purity, heavy metals, and microbial checks all pass.',
@@ -957,30 +956,33 @@ const DOCUMENT_SUMMARIES = {
     nextStep: 'No action required. Lot evidence is ready for the next audit bundle.',
   },
   'doc-basf-006': {
-    contents: '§606 FEI registration confirmation for BASF Personal Care Houston, extracted cleanly from the FDA letter.',
+    contents: '§606 FEI registration confirmation for BASF Personal Care Düsseldorf, extracted cleanly from the FDA letter.',
     gap: 'The renewal date on the document has passed; a refreshed registration confirmation is needed.',
     nextStep: 'Chase Mara Kessler for the renewed §606 registration confirmation.',
   },
 
   // Stepan — demo's "blocker" showcase
   'doc-stepan-003': {
-    contents: 'COA for CAPB lot 24-118 — identity and pH check clean, but the purity value falls below the Valent-tracked spec floor.',
-    gap: 'Purity fails spec floor; lot cannot ship under current acceptance criteria.',
-    nextStep: 'Block the lot. Request Priya Venkatesh re-issue from a compliant batch.',
+    contents:
+      'COA for Cocamidopropyl Betaine lot 24-118 — identity and pH within limits, but purity/active content reads below Valent’s acceptance floor. For measured out-of-spec results that are not a documentation mismatch, hold the lot and disposition through quarantine, investigation, and formal QA release — not by requesting another COA unless investigation proves lab error or transcription.',
+    gap:
+      'Measured below acceptance criterion — lot blocked pending QA hold, NC/OOS investigation, verification (correct spec attribute, units, method, representative sample), traceability, then formal disposition.',
+    nextStep:
+      'Place lot 24-118 on QA hold, prevent issuance to production, open an OOS/nonconformance record, and request supplier investigation plus a compliant replacement lot. Do not accept a revised COA unless the supplier documents a valid testing or transcription error.',
   },
 
   // IMCD — aging allergen refresh
   'doc-imcd-004': {
     contents: 'Partial Q2 refresh of IMCD-Greven\u2019s allergen declaration covering 3 of 7 ingredient lines.',
     gap: 'Four lines still reference the 2025 Q3 declaration; aggregate statement is incomplete.',
-    nextStep: 'Ask Tomasz Brandt to extend the refresh to the remaining 4 lines before end of month.',
+    nextStep: 'Ask Thomas Brandt to extend the refresh to the remaining 4 lines before end of month.',
   },
 
   // Ashland — hero FEI, clean state
   'doc-ashland-001': {
-    contents: '§606 FEI registration for Ashland\u2019s Bridgewater NJ facility, valid through May 2026.',
+    contents: '§606 FEI registration for Ashland\u2019s Bridgewater NJ facility, valid through May 2027.',
     gap: null,
-    nextStep: 'Schedule renewal outreach 30 days before expiry (Apr 14, 2026).',
+    nextStep: 'No action required. Renewal watchpoint set for Apr 2027.',
   },
 
   // Univar — draft safety dossier
@@ -1008,6 +1010,67 @@ const DOCUMENT_SUMMARIES = {
 for (const d of DOCUMENTS) {
   const summary = DOCUMENT_SUMMARIES[d.id];
   if (summary) d.summary = summary;
+}
+
+const BASF_INBOUND_OVERRIDES = {
+  allergen: {
+    id: 'doc-basf-003',
+    title: 'Allergen declaration · nut-oil blend (refreshed)',
+    flags: [],
+    source: 'email',
+    sourceDetail: 'm.kessler@basf-personal-care.example',
+    extractionConfidence: 'high',
+    extractionScore: 96,
+    ingestedAt: null,
+    validityEndsAt: '2027-04-20T00:00:00.000Z',
+    summary: {
+      contents: 'Refreshed allergen declaration covers the current nut-oil blend and supersedes the 2024 statement.',
+      gap: null,
+      nextStep: 'No action required. Updated declaration is ready for the next audit bundle.',
+    },
+  },
+  fei: {
+    id: 'doc-basf-006',
+    title: 'FEI registration confirmation · Düsseldorf facility',
+    flags: [],
+    source: 'email',
+    sourceDetail: 'm.kessler@basf-personal-care.example',
+    extractionConfidence: 'high',
+    extractionScore: 97,
+    ingestedAt: null,
+    validityEndsAt: '2027-04-20T00:00:00.000Z',
+    summary: {
+      contents: 'Renewed §606 FEI registration confirmation for the BASF Düsseldorf facility.',
+      gap: null,
+      nextStep: 'No action required. Registration is current and linked to the FEI pillar.',
+    },
+  },
+};
+
+export function applyBasfDemoDocumentOverrides(docs, inbound) {
+  if (!inbound) return docs;
+  return docs.map((doc) => {
+    const key =
+      doc.id === BASF_INBOUND_OVERRIDES.allergen.id
+        ? 'allergen'
+        : doc.id === BASF_INBOUND_OVERRIDES.fei.id
+          ? 'fei'
+          : null;
+    if (!key || !inbound[key]) return doc;
+    const override = BASF_INBOUND_OVERRIDES[key];
+    const ingestedAt =
+      typeof inbound[key] === 'string' ? inbound[key] : doc.ingestedAt;
+    return {
+      ...doc,
+      ...override,
+      ingestedAt,
+      extraction: buildExtraction({
+        ...doc,
+        ...override,
+        ingestedAt,
+      }),
+    };
+  });
 }
 
 // Indexed lookups for screens.

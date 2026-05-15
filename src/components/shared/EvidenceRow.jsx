@@ -136,7 +136,7 @@ export default function EvidenceRow({
         {showScore && (
           <div className="flex shrink-0 flex-col items-end leading-none">
             <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">
-              Score
+              Extraction
             </span>
             <span
               className={`mt-0.5 font-mono text-lg font-semibold tabular-nums ${

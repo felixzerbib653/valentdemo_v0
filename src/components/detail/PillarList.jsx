@@ -91,7 +91,8 @@ export default function PillarList({ supplier }) {
             const tone = STATUS_TONE[status] || STATUS_TONE.missing;
             const active = activePillarKey === p.key;
             const Icon = tone.Icon;
-            const canOpenInReview = status === 'fail' || status === 'pending';
+            const canOpenInReview =
+              status === 'fail' || status === 'pending' || status === 'missing';
             return (
               <div
                 key={p.key}

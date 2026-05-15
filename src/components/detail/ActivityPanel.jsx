@@ -33,6 +33,7 @@ const EVENT_VISUAL = {
   'bundle-generated': { Icon: FileCheck, tone: 'ok' },
   'evidence-expiring': { Icon: FileWarning, tone: 'warn' },
   'supplier-contacted': { Icon: Mail, tone: 'info' },
+  'evidence-received': { Icon: FileCheck, tone: 'ok' },
   'scan-summary': { Icon: Radio, tone: 'info' },
   'flag-resolved': { Icon: CheckCircle, tone: 'ok' },
   'document-approved': { Icon: CheckCircle, tone: 'ok' },
@@ -64,7 +65,7 @@ function formatMonitoringSince(iso) {
 }
 
 export default function ActivityPanel({ supplier }) {
-  const { resolutions, documentReviews } = useTrust();
+  const { resolutions, documentReviews, chaseSendEvents, basfDemoInboundEvidence } = useTrust();
 
   // Merge seeded events with live flag-resolution and document-review events
   // for this supplier. Session-state on TrustContext projects into the
@@ -108,12 +109,68 @@ export default function ActivityPanel({ supplier }) {
         });
       }
     }
-    const merged = [...base, ...resolutionEvents, ...reviewEvents];
+    const chaseEvents = [];
+    if (chaseSendEvents && chaseSendEvents.size > 0) {
+      for (const [flagId, event] of chaseSendEvents.entries()) {
+        if (event.supplierId !== supplier.id || !event.sentAt) continue;
+        chaseEvents.push({
+          id: `chase-${flagId}`,
+          supplierId: supplier.id,
+          type: 'supplier-contacted',
+          title: 'Chase email sent',
+          body: event.to ? `Sent to ${event.to}` : 'Supplier follow-up sent',
+          at: event.sentAt,
+        });
+      }
+    }
+    const inboundEvents = [];
+    if (supplier.id === 'sup-basf') {
+      if (basfDemoInboundEvidence?.allergen) {
+        inboundEvents.push({
+          id: 'basf-inbound-allergen',
+          supplierId: supplier.id,
+          type: 'evidence-received',
+          title: 'Refreshed allergen declaration received',
+          body: 'Updated evidence linked to Allergen declaration. Pillar moved to pass.',
+          at:
+            typeof basfDemoInboundEvidence.allergen === 'string'
+              ? basfDemoInboundEvidence.allergen
+              : supplier.lastScanAt,
+        });
+      }
+      if (basfDemoInboundEvidence?.fei) {
+        inboundEvents.push({
+          id: 'basf-inbound-fei',
+          supplierId: supplier.id,
+          type: 'evidence-received',
+          title: 'Renewed FEI confirmation received',
+          body: 'Updated Düsseldorf FEI evidence linked. Pillar moved to pass.',
+          at:
+            typeof basfDemoInboundEvidence.fei === 'string'
+              ? basfDemoInboundEvidence.fei
+              : supplier.lastScanAt,
+        });
+      }
+    }
+    const merged = [
+      ...base,
+      ...resolutionEvents,
+      ...reviewEvents,
+      ...chaseEvents,
+      ...inboundEvents,
+    ];
     merged.sort(
       (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
     );
     return merged.slice(0, 10);
-  }, [supplier.id, resolutions, documentReviews]);
+  }, [
+    supplier.id,
+    supplier.lastScanAt,
+    resolutions,
+    documentReviews,
+    chaseSendEvents,
+    basfDemoInboundEvidence,
+  ]);
 
   const monitoringSince = formatMonitoringSince(supplier.addedAt);
   const activityTitle = monitoringSince
@@ -241,21 +298,33 @@ function EventItem({ evt }) {
 }
 
 function ContactBlock({ supplier }) {
-  const { emitToast, now } = useTrust();
+  const { emitToast, now, chaseSendEvents } = useTrust();
   const contact = supplier.primaryContact;
   if (!contact) {
     return <p className="px-4 py-3 text-xs text-ink-500">No contact on file.</p>;
+  }
+  let lastContactedAt = contact.lastContactedAt;
+  if (chaseSendEvents && chaseSendEvents.size > 0) {
+    for (const event of chaseSendEvents.values()) {
+      if (event.supplierId !== supplier.id || !event.sentAt) continue;
+      if (
+        !lastContactedAt ||
+        new Date(event.sentAt).getTime() > new Date(lastContactedAt).getTime()
+      ) {
+        lastContactedAt = event.sentAt;
+      }
+    }
   }
   return (
     <div className="flex flex-col gap-2 px-4 py-3">
       <div>
         <div className="text-sm font-medium text-ink-900">{contact.name}</div>
         <div className="truncate font-mono text-[11px] text-ink-500">{contact.email}</div>
-        {contact.lastContactedAt ? (
+        {lastContactedAt ? (
           <div className="mt-0.5 text-[11px] text-ink-500">
             Last contacted{' '}
             <span className="font-mono tabular-nums">
-              {formatRelative(contact.lastContactedAt, now)}
+              {formatRelative(lastContactedAt, now)}
             </span>
           </div>
         ) : null}

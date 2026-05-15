@@ -16,6 +16,7 @@ import { getSupplier, applyBasfDemoInboundEvidence } from '../../data/suppliers.
 import {
   getDocumentsForSupplier,
   getDocumentsForPillar,
+  applyBasfDemoDocumentOverrides,
 } from '../../data/documents.js';
 import { PILLAR_LIST, PILLARS } from '../../data/trustPillars.js';
 import {
@@ -75,30 +76,44 @@ export default function AuditBundleModal() {
       emitToast={emitToast}
       lastScanAt={lastScanAt}
       now={now}
+      basfDemoInboundEvidence={basfDemoInboundEvidence}
     />
   );
 }
 
-function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastScanAt, now }) {
+function AuditBundleModalInner({
+  supplier,
+  pillarKeys,
+  onClose,
+  emitToast,
+  lastScanAt,
+  now,
+  basfDemoInboundEvidence,
+}) {
   const docsSource = useMemo(() => {
+    let docs;
     if (pillarKeys && pillarKeys.length) {
       const out = [];
       for (const k of pillarKeys) {
         out.push(...getDocumentsForPillar(supplier.id, k));
       }
-      return out;
+      docs = out;
+    } else {
+      docs = getDocumentsForSupplier(supplier.id);
     }
-    return getDocumentsForSupplier(supplier.id);
-  }, [supplier.id, pillarKeys]);
+    return supplier.id === 'sup-basf'
+      ? applyBasfDemoDocumentOverrides(docs, basfDemoInboundEvidence)
+      : docs;
+  }, [supplier.id, pillarKeys, basfDemoInboundEvidence]);
 
-  // Valent's initial pick — every document whose pillar has evidence on file.
+  // Valent's initial pick — only passing evidence is preselected.
   // Held separately from the reactive selection so the attribution sentence
   // stays stable as the operator toggles boxes (the footer carries live count).
   const initialValentPick = useMemo(() => {
     const ids = new Set();
     for (const d of docsSource) {
       const pillarStatus = supplier.pillars[d.pillarKey];
-      if (pillarStatus && pillarStatus !== 'missing') ids.add(d.id);
+      if (pillarStatus === 'pass') ids.add(d.id);
     }
     return ids;
   }, [docsSource, supplier.pillars]);
@@ -174,7 +189,7 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
     const gaps = [];
     for (const key of activeProfile.requiredPillars || []) {
       const status = supplier.pillars[key] || 'missing';
-      if (status === 'missing') gaps.push(PILLARS[key]);
+      if (status !== 'pass') gaps.push(PILLARS[key]);
     }
     return gaps;
   }, [isProgramProfile, activeProfile, supplier.pillars]);
@@ -183,9 +198,17 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
   const passingPillars = PILLAR_LIST.filter(
     (p) => supplier.pillars[p.key] === 'pass'
   ).length;
+  const selectedPillarCount = new Set(
+    selectedDocs.map((d) => d.pillarKey).filter(Boolean)
+  ).size;
+  const scopeLabel = pillarKeys?.length
+    ? `${pillarKeys.length} selected pillar${pillarKeys.length === 1 ? '' : 's'}`
+    : `${selectedPillarCount || PILLAR_LIST.length} bundled pillar${
+        selectedPillarCount === 1 ? '' : 's'
+      }`;
 
   const estimatedPages = Math.max(3, 2 + selectedDocs.length);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date(now || Date.now()).toISOString().slice(0, 10);
 
   const empty = docsSource.length === 0;
   const hasMissing = PILLAR_LIST.some(
@@ -313,6 +336,7 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
                 onPreparedForChange={setPreparedFor}
                 preparedForPlaceholder={preparedForPlaceholder}
                 includedCount={selectedDocs.length}
+                scopeLabel={scopeLabel}
                 date={today}
                 lastScanAt={lastScanAt}
                 now={now}
@@ -359,7 +383,7 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
                   <div className="mt-2 flex items-start gap-2 rounded-md border border-warn-100 bg-warn-50 px-3 py-2 text-xs text-warn-700">
                     <AlertTriangle size={14} strokeWidth={2.25} className="mt-0.5 shrink-0" />
                     <span>
-                      Required for {activeProfile.shortName} but not on file:{' '}
+                      Required for {activeProfile.shortName} and not audit-ready:{' '}
                       <span className="font-medium">
                         {missingRequiredPillars.map((p) => p.label).join(', ')}
                       </span>
@@ -485,7 +509,7 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
               ) : (
                 <>
                   <Download size={14} strokeWidth={2.25} />
-                  Download PDF
+              Queue PDF
                 </>
               )}
             </button>
@@ -505,11 +529,12 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
           preparedFor={preparedFor}
           selectedCount={selectedDocs.length}
           brandEntries={brandEntries}
+          note={note}
           onCancel={() => setEmailOpen(false)}
           onSend={(to) => {
             emitToast({
               tone: 'ok',
-              title: 'Audit bundle sent',
+              title: 'Email send queued',
               body: `To ${to} · ${selectedDocs.length} documents for ${supplier.name}.`,
               supplierId: supplier.id,
             });
@@ -521,7 +546,18 @@ function AuditBundleModalInner({ supplier, pillarKeys, onClose, emitToast, lastS
   );
 }
 
-function CoverPreview({ supplier, preparedFor, onPreparedForChange, preparedForPlaceholder, includedCount, date, lastScanAt, now, profile }) {
+function CoverPreview({
+  supplier,
+  preparedFor,
+  onPreparedForChange,
+  preparedForPlaceholder,
+  includedCount,
+  scopeLabel,
+  date,
+  lastScanAt,
+  now,
+  profile,
+}) {
   const taglineSuffix = profile?.coverTaglineSuffix || '';
   const attestation = profile?.footerAttestation
     ? profile.footerAttestation.replace('{date}', date)
@@ -567,7 +603,7 @@ function CoverPreview({ supplier, preparedFor, onPreparedForChange, preparedForP
       {/* Differentiation tagline — per docs/60-positioning.md.
           Program-format profiles append a suffix; they never replace the core tagline. */}
       <p className="mt-1.5 text-[11px] text-ink-500">
-        Generated from continuous supplier monitoring · MoCRA §604 / 606 / 607 / 609
+        Generated from continuous supplier monitoring · MoCRA §606 / 607 / 609
         {taglineSuffix ? <span className="ml-1">{taglineSuffix}</span> : null}
       </p>
 
@@ -595,7 +631,7 @@ function CoverPreview({ supplier, preparedFor, onPreparedForChange, preparedForP
           label="Last scan"
           value={lastScanAt && now ? formatRelative(lastScanAt, now) : 'within the hour'}
         />
-        <Fact label="Scope" value="All 7 pillars" />
+        <Fact label="Scope" value={scopeLabel} />
       </dl>
 
       {/* Pillar strip */}
@@ -717,12 +753,21 @@ function EvidenceCheckRow({ doc, checked, onToggle, onPreview, profile, isRequir
   );
 }
 
-function EmailDialog({ supplier, preparedFor, selectedCount, brandEntries = [], onCancel, onSend }) {
+function EmailDialog({
+  supplier,
+  preparedFor,
+  selectedCount,
+  brandEntries = [],
+  note,
+  onCancel,
+  onSend,
+}) {
   // Recipient resolution order:
   //  1. If preparedFor already looks like an email, use it verbatim.
   //  2. Sole-brand supplier → use that brand's diligenceContact.
   //  3. Multi-brand supplier → match preparedFor prefix to a brand name.
-  //  4. Fall back to the supplier's primary contact (legacy behaviour).
+  //  4. Single-supplier/internal packet fallback uses the supplier contact.
+  //     Multi-brand bundles require explicit recipient intent.
   const soleBrand = brandEntries.length === 1 ? brandEntries[0].brand : null;
   const matchedBrand = (() => {
     if (!preparedFor?.trim() || brandEntries.length <= 1) return null;
@@ -736,6 +781,7 @@ function EmailDialog({ supplier, preparedFor, selectedCount, brandEntries = [], 
     if (preparedFor && /@/.test(preparedFor)) return preparedFor.trim();
     if (soleBrand) return soleBrand.diligenceContact;
     if (matchedBrand) return matchedBrand.diligenceContact;
+    if (brandEntries.length > 1) return '';
     return supplier.primaryContact?.email || '';
   })();
   const [to, setTo] = useState(initialRecipient);
@@ -743,7 +789,7 @@ function EmailDialog({ supplier, preparedFor, selectedCount, brandEntries = [], 
     `Compliance packet — ${supplier.name}`
   );
   const [body, setBody] = useState(
-    `Hi ${preparedFor || 'team'},\n\nAttached is the Valent Trust compliance packet for ${supplier.name}. ${selectedCount} documents are included. Let me know if you need anything else.\n\n— Sarah`
+    `Hi ${preparedFor || 'team'},\n\nAttached is the Valent Trust compliance packet for ${supplier.name}. ${selectedCount} documents are included.${note ? `\n\nNote for recipient: ${note}` : ''}\n\nLet me know if you need anything else.\n\n— Sarah`
   );
 
   return (
@@ -796,7 +842,9 @@ function EmailDialog({ supplier, preparedFor, selectedCount, brandEntries = [], 
             />
           </Field>
           <p className="text-[11px] text-ink-500">
-            Your bundle will be attached as a PDF.
+            {brandEntries.length > 1 && !to.trim()
+              ? 'Select a brand recipient before sending this shared-supplier bundle.'
+              : 'Your bundle will be attached as a PDF.'}
           </p>
         </div>
         <footer className="flex items-center justify-end gap-2 border-t border-paper-200 px-5 py-3">
@@ -814,7 +862,7 @@ function EmailDialog({ supplier, preparedFor, selectedCount, brandEntries = [], 
             className="inline-flex items-center gap-1.5 rounded-md bg-ok px-3 py-1.5 text-sm font-semibold text-paper-0 shadow-sm transition-colors hover:bg-ok-700 focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Mail size={14} strokeWidth={2.25} />
-            Send
+            Preview send
           </button>
         </footer>
       </div>

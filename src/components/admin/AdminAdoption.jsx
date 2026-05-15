@@ -168,7 +168,7 @@ export default function AdminAdoption() {
               Team roster
             </div>
             <div className="mt-0.5 text-[11px] text-ink-500">
-              {TEAM_ROSTER.length} operators · sorted by weekly triage volume
+              {TEAM_ROSTER.length} operators · sorted by weekly document volume
             </div>
           </div>
           <span className="rounded-md bg-paper-100 px-2 py-0.5 font-mono text-[10px] text-ink-500">
@@ -188,12 +188,14 @@ export default function AdminAdoption() {
                 Last active
               </th>
               <th className="px-5 py-2 text-right font-semibold uppercase tracking-[0.08em] text-[10px]">
-                Weekly triage
+                Weekly docs
               </th>
             </tr>
           </thead>
           <tbody>
-            {TEAM_ROSTER.map((op) => (
+            {[...TEAM_ROSTER]
+              .sort((a, b) => b.weeklyTriage - a.weeklyTriage)
+              .map((op) => (
               <tr
                 key={op.id}
                 className="border-t border-paper-200 text-ink-700"

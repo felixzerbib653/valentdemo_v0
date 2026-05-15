@@ -92,7 +92,7 @@ const ROUTE_OPTIONS = [
   { key: 'legal', label: 'Route to Legal' },
 ];
 
-export default function FlagRow({ flag, onRoute }) {
+export default function FlagRow({ flag, onRoute, routedTeam }) {
   const {
     navigate,
     emitToast,
@@ -112,6 +112,7 @@ export default function FlagRow({ flag, onRoute }) {
   const resolution = resolutions?.get(flag.id) || null;
   const isResolved = Boolean(resolution);
   const chaseSendEvent = chaseSendEvents?.get(flag.id) || null;
+  const routedOption = ROUTE_OPTIONS.find((opt) => opt.key === routedTeam);
 
   const handleOpenSupplier = (e) => {
     e?.stopPropagation();
@@ -283,6 +284,14 @@ export default function FlagRow({ flag, onRoute }) {
                 <UserCircle2 size={11} strokeWidth={2} />
                 {flag.assignee ? flag.assignee.name : 'Unassigned'}
               </span>
+              {routedOption ? (
+                <>
+                  <span className="text-ink-400">·</span>
+                  <span className="font-medium text-ink-700">
+                    {routedOption.label.replace('Route to ', 'Routed to ')}
+                  </span>
+                </>
+              ) : null}
             </>
           )}
         </div>
@@ -355,7 +364,7 @@ export default function FlagRow({ flag, onRoute }) {
             ) : null}
           </div>
         )}
-        {!isResolved ? (
+        {!isResolved && !routedOption ? (
           <div className="relative">
             <button
               type="button"

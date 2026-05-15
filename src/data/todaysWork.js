@@ -47,7 +47,7 @@ export const TODAYS_WORK = [
     severity: 'blocker',
     title: 'Chase BASF Düsseldorf FEI registration',
     reason:
-      'FEI lapsed 29 days ago. Paperwork was sent 2026-03-22; no response from Mara Kessler. Cannot ship any BASF ingredient under MoCRA without this.',
+      'Renewal paperwork was sent 29 days ago on 2026-03-22; no response from Mara Kessler. Cannot ship any BASF ingredient under MoCRA without this.',
     dueHint: '29d overdue',
     cta: { label: 'Draft chase email', action: 'draft-email' },
     rankedBy: 'valent',
@@ -59,9 +59,9 @@ export const TODAYS_WORK = [
     supplierId: 'sup-stepan',
     flagId: 'flag-sup-stepan-purity',
     severity: 'blocker',
-    title: 'Escalate Stepan CAPB lot 24-118 out-of-spec CoA',
+    title: 'Hold Stepan CAPB lot 24-118 · NC/OOS + supplier investigation',
     reason:
-      'Certificate of Analysis came in below spec floor. Priya Venkatesh last contacted 2026-04-12 — no replacement lot identified. Production blocked until resolved.',
+      'COA below acceptance floor — QA hold/quarantine, nonconformance or OOS investigation, verify spec/method/units and sampling, run traceability (issued to batches? shipped?), then reject/replacement or deviation only with approvals. Priya Venkatesh last contacted 2026-04-12 — no replacement lot identified yet.',
     dueHint: '8d open',
     cta: { label: 'Escalate to Quality', action: 'draft-email' },
     rankedBy: 'valent',
@@ -75,7 +75,7 @@ export const TODAYS_WORK = [
     severity: 'blocker',
     title: 'Request refreshed BASF allergen statement',
     reason:
-      'On-file statement dates to 2024 and does not cover the current nut-oil blend. Labelling risk on every BASF-sourced SKU until this lands.',
+      'On-file statement expired Mar 9 and does not cover the current nut-oil blend. Labelling risk on every BASF-sourced SKU until this lands.',
     cta: { label: 'Request current version', action: 'request-renewal' },
     rankedBy: 'valent',
     rankedAt: RANKED_AT,
@@ -102,7 +102,7 @@ export const TODAYS_WORK = [
     severity: 'informational',
     title: 'Check in on Elementis onboarding baseline',
     reason:
-      'SDS received last Friday, remaining six pillars still pending. Two-week onboarding window closes 2026-04-29. Jordan Vale on point.',
+      'SDS received last Friday; safety is in review and five baseline pillars are still pending. Two-week onboarding window closes 2026-04-29. Jordan Vale on point.',
     dueHint: '9d to baseline',
     cta: { label: 'Open supplier', action: 'open-supplier' },
     rankedBy: 'valent',

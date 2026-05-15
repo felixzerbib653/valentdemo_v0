@@ -3,7 +3,7 @@ import { computeTrustScore, deriveStatus } from './trustPillars.js';
 // 14 supplier roster for the Trust Grid.
 // Distribution targeted for a readable demo: 3 blocked / 4 watch / 6 ready / 1 onboarding.
 // Pillar statuses are the source of truth — trustScore is derived below.
-// Demo "now": 2026-04-20T13:12:00Z (Tuesday 9:12am ET — matches J1 morning triage).
+// Demo "now": 2026-04-20T13:12:00Z (Monday 9:12am ET — matches J1 morning triage).
 
 const DEMO_NOW = '2026-04-20T13:12:00.000Z';
 
@@ -27,7 +27,7 @@ const roster = [
       lastContactedAt: '2026-04-11T15:20:00.000Z',
     },
     notes:
-      'Consolidated supplier record across Ludwigshafen and Düsseldorf facilities. FEI on the Düsseldorf site has lapsed — paperwork sent 2026-03-22, no response. Allergen statement from 2024 no longer reflects the current nut-oil blend.',
+      'Consolidated supplier record across Ludwigshafen and Düsseldorf facilities. FEI on the Düsseldorf site has lapsed — paperwork sent 2026-03-22, no response. Allergen statement from 2025 no longer reflects the current nut-oil blend.',
     pillars: {
       fei: 'fail',
       cosmeticListing: 'pass',
@@ -85,7 +85,7 @@ const roster = [
       lastContactedAt: '2026-04-12T09:30:00.000Z',
     },
     notes:
-      'New relationship, still coming up the curve. §607 listing was filed but the receipt confirmation has not landed back in our file — Stepan to re-send. Purity on CAPB lot 24-118 came in out of spec.',
+      'New relationship, still coming up the curve. §607 listing was filed but the receipt confirmation has not landed back in our file — Stepan to re-send. CAPB lot 24-118 is on QA hold — COA below acceptance floor; NC/OOS and supplier investigation in progress.',
     pillars: {
       fei: 'pass',
       cosmeticListing: 'missing',
@@ -414,7 +414,7 @@ const roster = [
     pillars: {
       fei: 'pending',
       cosmeticListing: 'missing',
-      safety: 'missing',
+      safety: 'pending',
       allergen: 'missing',
       origin: 'pending',
       purity: 'missing',
@@ -442,11 +442,11 @@ export function getSupplier(id) {
 }
 
 // Portfolio roll-ups for the Trust Grid summary band.
-export function getPortfolioSummary() {
+export function getPortfolioSummary(suppliers = SUPPLIERS) {
   const counts = { ready: 0, watch: 0, blocked: 0, onboarding: 0 };
   let sum = 0;
   let scoredCount = 0;
-  for (const s of SUPPLIERS) {
+  for (const s of suppliers) {
     counts[s.status] = (counts[s.status] || 0) + 1;
     if (s.status !== 'onboarding') {
       sum += s.trustScore;
@@ -455,7 +455,7 @@ export function getPortfolioSummary() {
   }
   const portfolioScore = scoredCount ? Math.round(sum / scoredCount) : 0;
   return {
-    total: SUPPLIERS.length,
+    total: suppliers.length,
     counts,
     portfolioScore,
     portfolioDeltaWeek: 2,

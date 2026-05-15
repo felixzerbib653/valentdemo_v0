@@ -51,7 +51,10 @@ export default function ProvenanceBreadcrumb({ supplier, selectedCount }) {
       (d) => d.extractionConfidence === 'high' && d.linkStatus === 'linked'
     ).length;
     const toReview = Math.max(0, totalDocs - autoApproved);
-    const totalFields = Math.max(totalDocs * 4, totalDocs); // ~4 fields per doc
+    const totalFields = allDocs.reduce(
+      (sum, doc) => sum + Object.keys(doc.extraction?.fields || {}).length,
+      0
+    );
 
     const supplierFlags = getFlagsForSupplier(supplier.id);
     const openFlags = supplierFlags.filter(
@@ -63,14 +66,14 @@ export default function ProvenanceBreadcrumb({ supplier, selectedCount }) {
     // Ingest anchors to the supplier's last-scan timestamp (same source the
     // TopBar pulse reads). Flag interleaves ~2s later. Bundle is now.
     const ingestAt = supplier.lastScanAt;
-    const ingestDurationSec = Math.max(8, Math.min(18, Math.round(totalDocs * 1.5)));
+    const ingestDurationSec = null;
     const flagAt = addSeconds(ingestAt, ingestDurationSec);
-    const flagDurationSec = 2;
+    const flagDurationSec = null;
     const bundleAt = now ? new Date(now).toISOString() : new Date().toISOString();
-    const bundleDurationSec = 3;
+    const bundleDurationSec = null;
 
     const ingestDescription = totalDocs > 0
-      ? `Extracted ${totalFields} fields from ${totalDocs} supplier document${totalDocs === 1 ? '' : 's'}. ${autoApproved} auto-approved, ${toReview} sent to review.`
+      ? `Captured ${totalFields} structured field${totalFields === 1 ? '' : 's'} from ${totalDocs} supplier document${totalDocs === 1 ? '' : 's'}. ${autoApproved} linked cleanly, ${toReview} flagged for operator review.`
       : `No documents on file for this supplier yet. Ingest is watching inbound channels.`;
 
     let flagDescription;
@@ -85,13 +88,8 @@ export default function ProvenanceBreadcrumb({ supplier, selectedCount }) {
 
     const bundleDescription = `Assembled cover, pillar strip, and ${selectedCount} evidence document${selectedCount === 1 ? '' : 's'} into this artifact.`;
 
-    // Total agent actions is the sum of observable per-agent actions. Kept
-    // loose — the collapsed strip cites it as a single number to anchor the
-    // claim ("agents did real work"). Precision isn't the point.
-    const actionCount = totalDocs + flagCount + 1 + Math.max(0, autoApproved - 0);
-
     return {
-      actionCount,
+      actionSummary: `${selectedCount} selected`,
       rows: [
         {
           agent: 'ingest',
@@ -156,8 +154,7 @@ export default function ProvenanceBreadcrumb({ supplier, selectedCount }) {
             <AgentPill label="Bundle" compact />
           </div>
           <div className="flex items-center gap-2 text-[11px] text-ink-500">
-            <span className="font-mono tabular-nums">{chain.actionCount}</span>
-            <span>agent actions</span>
+            <span className="font-mono tabular-nums">{chain.actionSummary}</span>
             <span className="mx-0.5 text-ink-400">·</span>
             <span className="inline-flex items-center gap-0.5 font-medium text-accent">
               view detail
@@ -186,8 +183,12 @@ function BreadcrumbRow({ row }) {
       </p>
       <span className="shrink-0 whitespace-nowrap pt-1 font-mono text-[10px] tabular-nums text-ink-500">
         {formatShortTime(row.timestamp)}
-        <span className="mx-1 text-ink-400">·</span>
-        {row.durationSeconds}s
+        {row.durationSeconds ? (
+          <>
+            <span className="mx-1 text-ink-400">·</span>
+            {row.durationSeconds}s
+          </>
+        ) : null}
       </span>
     </li>
   );

@@ -173,20 +173,40 @@ export function deriveFlags() {
 
       const remediationFn =
         PILLAR_REMEDIATION[status] || PILLAR_REMEDIATION.pending;
+
+      let flagTitle = title;
+      let flagBody = body;
+      let suggestedRemediation = remediationFn(pillar, supplier);
+
+      // Stepan CAPB — OOS path (QA hold / NC / disposition), not “chase a new COA” by default.
+      if (
+        supplier.id === 'sup-stepan' &&
+        pillarKey === 'purity' &&
+        status === 'fail'
+      ) {
+        flagTitle = 'CAPB lot 24-118 · below acceptance (QA hold)';
+        flagBody =
+          'Supplier COA shows the lot below the agreed acceptance floor. Segregate or quarantine; set status in ERP/WMS/LIMS (QA hold / do not use); open nonconformance or OOS; attach COA/spec/PO/sampling and internal data; verify the failure (correct attribute vs assay/solids/salt, units, method, representative sample, transcription). Before disposition, trace whether any quantity was issued to production, WIP, finished goods, or shipped — escalate if product is in commerce. Disposition: reject/replacement/credit, retest only if the first result is invalidated, or use under deviation/concession only with documented QA (and often customer) approval — not a revised COA alone unless investigation proves lab or transcription error.';
+        suggestedRemediation = {
+          text: 'Place lot on QA hold and block issuance to production. Open NC/OOS, request supplier investigation (batch record, analytical data, retain retest if applicable) and a compliant replacement lot.',
+          action: 'draft-email',
+        };
+      }
+
       flags.push({
         id: `flag-${supplier.id}-${pillarKey}`,
         supplierId: supplier.id,
         pillarKey,
         severity,
-        title,
-        body,
+        title: flagTitle,
+        body: flagBody,
         openedAt: openedAtIso(severity, seed),
         assignee: assigneeFor(seed),
         status: 'open',
         relatedDocuments: relatedDocIds(supplier.id, pillarKey),
         source: 'pillar',
         createdBy: 'valent',
-        suggestedRemediation: remediationFn(pillar, supplier),
+        suggestedRemediation,
       });
     }
   }

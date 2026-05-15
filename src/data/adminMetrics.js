@@ -9,10 +9,10 @@
 export const ADMIN_KPIS = [
   {
     key: 'docs-week',
-    label: 'Documents processed · this week',
+    label: 'Documents processed · last week',
     value: 318,
     unit: 'docs',
-    delta: '+12% vs last week',
+    delta: '+12% vs prior week',
     deltaTone: 'ok',
   },
   {
@@ -120,14 +120,14 @@ export const SETTINGS_GROUPS = [
     items: [
       'Daily digest · 8:00 AM · Sarah Chen',
       'Blocker alerts · immediate · #compliance-ops',
-      'Weekly adoption summary · Mondays · leadership@',
+      'Weekly adoption summary · Mondays · leadership@elevationlabs.example',
     ],
   },
   {
     key: 'roles',
     title: 'Role assignments',
     items: [
-      'Compliance Ops · read / write · 2 seats',
+      'Compliance Ops · read / write · 3 seats',
       'Procurement · read / comment · 1 seat',
       'Quality · read / write · 1 seat',
       'External consultant · read-only · 1 seat',

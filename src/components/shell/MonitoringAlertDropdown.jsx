@@ -102,7 +102,7 @@ export default function MonitoringAlertDropdown({ onClose }) {
           <span className="text-xs font-semibold text-ink-900">
             Monitoring
           </span>
-          <span className="text-[11px] text-ink-500">· continuous scan</span>
+          <span className="text-[11px] text-ink-500">· latest scan</span>
         </div>
         <button
           type="button"
@@ -178,6 +178,7 @@ export default function MonitoringAlertDropdown({ onClose }) {
                   total={alerts.newAwaitingReview.total}
                   shown={alerts.newAwaitingReview.items.length}
                   onClick={goIngest}
+                  label="View all in Ingest Inbox"
                 />
               </Section>
             )}
@@ -321,7 +322,7 @@ function HealthyEmpty() {
           All pillars healthy
         </div>
         <p className="mt-0.5 text-[11px] text-ink-500">
-          Next scheduled scan in <span className="font-mono tabular-nums">4h</span>.
+          No alerts from the latest scan.
         </p>
       </div>
     </div>

@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, CornerDownLeft } from 'lucide-react';
 import { useTrust, formatRelative } from '../../context/TrustContext.jsx';
 import useSupplierSearch from '../../hooks/useSupplierSearch.js';
+import {
+  SUPPLIERS,
+  applyBasfDemoInboundEvidence,
+  getSupplier,
+} from '../../data/suppliers.js';
 import StatusPill from '../shared/StatusPill.jsx';
 import MonitoringAlertDropdown from './MonitoringAlertDropdown.jsx';
 
@@ -14,7 +19,7 @@ import MonitoringAlertDropdown from './MonitoringAlertDropdown.jsx';
 // move, Enter opens, Escape clears + closes. Click outside closes.
 
 const PAGE_TITLES = {
-  'trust-grid': 'Supplier Trust',
+  'trust-grid': 'Valent TrustGrid',
   'supplier-detail': 'Supplier',
   ingest: 'Ingest Inbox',
   review: 'Review Queue',
@@ -25,8 +30,19 @@ const PAGE_TITLES = {
 };
 
 export default function TopBar() {
-  const { page, lastScanAt, now, openSupplier } = useTrust();
-  const title = PAGE_TITLES[page] || 'Valent Trust';
+  const {
+    page,
+    activeSupplierId,
+    lastScanAt,
+    now,
+    openSupplier,
+    basfDemoInboundEvidence,
+  } = useTrust();
+  const activeSupplier = activeSupplierId ? getSupplier(activeSupplierId) : null;
+  const title =
+    page === 'supplier-detail' && activeSupplier
+      ? activeSupplier.name
+      : PAGE_TITLES[page] || 'Valent Trust';
 
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -43,6 +59,18 @@ export default function TopBar() {
     setAlertOpen(false);
   }, [page]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setOpen(Boolean(query.trim()));
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [query]);
+
   // Click-outside close for the monitoring dropdown. Lives here (not in the
   // dropdown) because the wrapper contains both the anchor button and panel
   // — otherwise clicking the anchor would close + reopen on the same click.
@@ -57,7 +85,17 @@ export default function TopBar() {
     return () => window.removeEventListener('mousedown', handler);
   }, [alertOpen]);
 
-  const results = useSupplierSearch(query);
+  const suppliersLive = useMemo(
+    () =>
+      SUPPLIERS.map((s) =>
+        s.id === 'sup-basf'
+          ? applyBasfDemoInboundEvidence(s, basfDemoInboundEvidence)
+          : s
+      ),
+    [basfDemoInboundEvidence]
+  );
+  const searchState = useSupplierSearch(query, { suppliers: suppliersLive });
+  const results = searchState.results;
 
   // Clamp active index when results change.
   useEffect(() => {
@@ -150,7 +188,8 @@ export default function TopBar() {
               <>
                 <div className="flex items-center justify-between border-b border-paper-200 bg-paper-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-500">
                   <span>
-                    {results.length} match{results.length === 1 ? '' : 'es'}
+                    {searchState.capped ? `Top ${results.length}` : searchState.total}{' '}
+                    match{searchState.total === 1 ? '' : 'es'}
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <CornerDownLeft size={10} strokeWidth={2.25} />

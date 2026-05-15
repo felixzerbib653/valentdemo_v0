@@ -31,7 +31,7 @@ const LABEL = {
   extracted: 'Extracted by Valent',
   computed: 'Computed by Valent',
   drafted: 'Drafted by Valent',
-  ranked: 'Valent selected',
+  ranked: 'Ranked by Valent',
   summarized: 'Summarized by Valent',
 };
 
