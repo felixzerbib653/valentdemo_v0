@@ -66,7 +66,7 @@ export default function ToastStack() {
 }
 
 function Toast({ toast, onDismiss, onMouseEnter, onMouseLeave }) {
-  const { navigate, openSupplier, openAuditBundle } = useTrust();
+  const { navigate, openSupplier, openAuditBundle, openDocumentPreview } = useTrust();
   const tone = TONE[toast.tone] || TONE.info;
   const Icon = tone.Icon;
 
@@ -77,6 +77,14 @@ function Toast({ toast, onDismiss, onMouseEnter, onMouseLeave }) {
       openSupplier(a.supplierId);
     } else if (a.type === 'open-bundle' && a.supplierId) {
       openAuditBundle(a.supplierId, a.pillarKeys || null);
+    } else if (a.type === 'open-document-preview' && a.docId) {
+      if (a.supplierId) {
+        navigate('supplier-detail', {
+          supplierId: a.supplierId,
+          pillarKey: a.pillarKey || null,
+        });
+      }
+      openDocumentPreview(a.docId, { processing: a.processing });
     } else if (a.type === 'navigate' && a.page) {
       navigate(a.page, a.opts || {});
     }

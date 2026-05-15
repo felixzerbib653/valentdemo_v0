@@ -144,7 +144,7 @@ export default function ActivityPanel({ supplier }) {
           supplierId: supplier.id,
           type: 'evidence-received',
           title: 'Renewed FEI confirmation received',
-          body: 'Updated Düsseldorf FEI evidence linked. Pillar moved to pass.',
+          body: 'Updated Houston Site FEI evidence linked. Pillar moved to pass.',
           at:
             typeof basfDemoInboundEvidence.fei === 'string'
               ? basfDemoInboundEvidence.fei

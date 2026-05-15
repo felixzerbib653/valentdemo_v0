@@ -57,12 +57,14 @@ const SOURCE_PHRASE = {
 };
 
 const CONFIDENCE_DESC = {
-  high: 'Born-digital extraction path. All fields captured with high confidence.',
+  high: 'All fields captured with high confidence.',
   medium: 'Scan-world extraction path. Most fields captured; a few flagged for review.',
   low: 'Degraded source quality. Several fields captured at low confidence; manual review recommended.',
 };
 
-export default function DocumentPreview({ doc, onClose }) {
+export default function DocumentPreview({ doc, onClose, initialProcessing = false }) {
+  const [isProcessing, setIsProcessing] = useState(Boolean(initialProcessing));
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') onClose();
@@ -70,6 +72,15 @@ export default function DocumentPreview({ doc, onClose }) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
+
+  useEffect(() => {
+    setIsProcessing(Boolean(initialProcessing));
+    if (!initialProcessing || !doc) return undefined;
+    const timer = window.setTimeout(() => {
+      setIsProcessing(false);
+    }, 2600);
+    return () => window.clearTimeout(timer);
+  }, [doc?.id, initialProcessing]);
 
   const {
     now,
@@ -116,7 +127,13 @@ export default function DocumentPreview({ doc, onClose }) {
         </button>
 
         {/* Left: persona paper surface */}
-        <PersonaPaper doc={doc} persona={persona} supplier={supplier} pillar={pillar} />
+        <PersonaPaper
+          doc={doc}
+          persona={persona}
+          supplier={supplier}
+          pillar={pillar}
+          isProcessing={isProcessing}
+        />
 
         {/* Right: captured-by-scan panel */}
         <aside className="flex min-h-0 flex-col border-l border-paper-300 bg-paper-50">
@@ -138,84 +155,94 @@ export default function DocumentPreview({ doc, onClose }) {
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-            <AgentSummaryBlock doc={doc} />
+            {isProcessing ? (
+              <ExtractionProcessingBlock doc={doc} />
+            ) : (
+              <>
+                <AgentSummaryBlock doc={doc} />
 
-            {canActOnGap ? (
-              <ActOnGapRow
-                doc={doc}
-                supplier={supplier}
-                onChase={() => {
-                  const title = (
-                    (doc.flags && doc.flags[0]) ||
-                    (doc.summary && doc.summary.nextStep) ||
-                    'Evidence gap'
-                  ).slice(0, 140);
-                  openChaseDraft({
-                    supplierId: doc.supplierId,
-                    pillarKey: doc.pillarKey,
-                    title,
-                  });
-                  onClose();
-                }}
-              />
-            ) : null}
+                {canActOnGap ? (
+                  <ActOnGapRow
+                    doc={doc}
+                    supplier={supplier}
+                    onChase={() => {
+                      const title = (
+                        (doc.flags && doc.flags[0]) ||
+                        (doc.summary && doc.summary.nextStep) ||
+                        'Evidence gap'
+                      ).slice(0, 140);
+                      openChaseDraft({
+                        supplierId: doc.supplierId,
+                        pillarKey: doc.pillarKey,
+                        title,
+                      });
+                      onClose();
+                    }}
+                  />
+                ) : null}
 
-            {doc.flags && doc.flags.length > 0 ? (
-              <div className="mb-4 rounded-lg border border-block-100 bg-block-50 px-3 py-2.5">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-block-700">
-                  <AlertTriangle size={12} strokeWidth={2.25} />
-                  <span>Flags</span>
+                {doc.flags && doc.flags.length > 0 ? (
+                  <div className="mb-4 rounded-lg border border-block-100 bg-block-50 px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-block-700">
+                      <AlertTriangle size={12} strokeWidth={2.25} />
+                      <span>Flags</span>
+                    </div>
+                    <ul className="mt-1.5 space-y-0.5 text-xs text-block-700">
+                      {doc.flags.map((flag, idx) => (
+                        <li key={idx}>· {flag}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {isReviewable ? (
+                  <ReviewControls
+                    doc={doc}
+                    review={review}
+                    now={now}
+                    allowApprove={doc.linkStatus !== 'failed'}
+                    onReview={(action, note) => {
+                      emitDocumentReview(doc.id, action, note);
+                      const meta = REVIEW_ACTION_META[action];
+                      if (meta) {
+                        emitToast({
+                          tone:
+                            meta.tone === 'block'
+                              ? 'warn'
+                              : meta.tone === 'warn'
+                                ? 'warn'
+                                : 'ok',
+                          title: meta.toastTitle,
+                          body: `Sent feedback to Valent · ${doc.title}`,
+                        });
+                      }
+                    }}
+                    onUndo={() => {
+                      clearDocumentReview(doc.id);
+                      emitToast({
+                        tone: 'info',
+                        title: 'Review cleared',
+                        body: `Re-opened ${doc.title} for review.`,
+                      });
+                    }}
+                  />
+                ) : null}
+
+                <p className="mb-3 mt-4 text-xs text-ink-500">
+                  {CONFIDENCE_DESC[doc.extractionConfidence] || CONFIDENCE_DESC.medium}
+                </p>
+
+                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
+                  <FileCheck size={11} strokeWidth={2.25} className="text-accent-ink" />
+                  All Fields Captured
                 </div>
-                <ul className="mt-1.5 space-y-0.5 text-xs text-block-700">
-                  {doc.flags.map((flag, idx) => (
-                    <li key={idx}>· {flag}</li>
+                <dl className="space-y-3">
+                  {captured.map((field, idx) => (
+                    <CapturedField key={`${field.label}-${idx}`} field={field} />
                   ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {isReviewable ? (
-              <ReviewControls
-                doc={doc}
-                review={review}
-                now={now}
-                allowApprove={doc.linkStatus !== 'failed'}
-                onReview={(action, note) => {
-                  emitDocumentReview(doc.id, action, note);
-                  const meta = REVIEW_ACTION_META[action];
-                  if (meta) {
-                    emitToast({
-                      tone:
-                        meta.tone === 'block'
-                          ? 'warn'
-                          : meta.tone === 'warn'
-                            ? 'warn'
-                            : 'ok',
-                      title: meta.toastTitle,
-                      body: `Sent feedback to Valent · ${doc.title}`,
-                    });
-                  }
-                }}
-                onUndo={() => {
-                  clearDocumentReview(doc.id);
-                  emitToast({
-                    tone: 'info',
-                    title: 'Review cleared',
-                    body: `Re-opened ${doc.title} for review.`,
-                  });
-                }}
-              />
-            ) : null}
-
-            <p className="mb-3 mt-4 text-xs text-ink-500">
-              {CONFIDENCE_DESC[doc.extractionConfidence] || CONFIDENCE_DESC.medium}
-            </p>
-
-            <dl className="space-y-3">
-              {captured.map((field) => (
-                <CapturedField key={field.label} field={field} />
-              ))}
-            </dl>
+                </dl>
+              </>
+            )}
           </div>
 
           <footer className="border-t border-paper-300 bg-paper-0 px-5 py-3">
@@ -237,7 +264,7 @@ export default function DocumentPreview({ doc, onClose }) {
   );
 }
 
-function PersonaPaper({ doc, persona, supplier, pillar }) {
+function PersonaPaper({ doc, persona, supplier, pillar, isProcessing = false }) {
   const [assetFailed, setAssetFailed] = useState(false);
   const visual = persona.visual || {};
   const paperBg = {
@@ -249,7 +276,7 @@ function PersonaPaper({ doc, persona, supplier, pillar }) {
 
   return (
     <div className="relative flex min-h-0 flex-col bg-paper-100 p-6">
-      {/* Persona header chip */}
+      {/* File meta chip */}
       <div className="mb-3 flex items-center gap-2">
         <span className="inline-flex items-center gap-1 rounded-md border border-paper-300 bg-paper-0 px-2 py-0.5 text-[11px] font-medium text-ink-500">
           <FileText size={11} strokeWidth={2.25} />
@@ -258,9 +285,6 @@ function PersonaPaper({ doc, persona, supplier, pillar }) {
             <span className="font-mono tabular-nums">· {doc.pages}pp</span>
           ) : null}
         </span>
-        <span className="inline-flex items-center rounded-md border border-paper-300 bg-paper-0 px-2 py-0.5 text-[11px] font-medium text-ink-500">
-          Persona · {persona.label}
-        </span>
       </div>
 
       {/* Paper surface */}
@@ -268,7 +292,9 @@ function PersonaPaper({ doc, persona, supplier, pillar }) {
         className="relative flex-1 overflow-hidden rounded-lg border border-paper-300 shadow-sm"
         style={{ backgroundColor: paperBg }}
       >
-        {showPreviewImage ? (
+        {isProcessing ? (
+          <ProcessingPaperSurface doc={doc} supplier={supplier} pillar={pillar} />
+        ) : showPreviewImage ? (
           <div className="relative h-full overflow-auto bg-paper-100 px-6 py-6">
             <img
               src={doc.previewImage}
@@ -322,6 +348,74 @@ function PersonaPaper({ doc, persona, supplier, pillar }) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ProcessingPaperSurface({ doc, supplier, pillar }) {
+  const receivedName =
+    doc.id === 'doc-basf-006'
+      ? 'basf-fei-houston-606-renewed.png'
+      : doc.id === 'doc-basf-003'
+        ? 'basf-allergen-nut-oil-renewed.png'
+        : `${doc.id}.${doc.fileType || 'pdf'}`;
+  return (
+    <div className="relative h-full overflow-hidden bg-paper-100 px-8 py-8">
+      <div className="mx-auto flex h-full max-w-[560px] flex-col rounded-sm border border-paper-300 bg-paper-0 px-8 py-8 shadow-md">
+        <div className="flex items-start justify-between gap-4 border-b border-paper-300 pb-4">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">
+              New attachment received
+            </div>
+            <h3 className="mt-1 truncate text-lg font-semibold text-ink-900">
+              {receivedName}
+            </h3>
+            <p className="mt-1 text-xs text-ink-500">
+              {supplier ? supplier.primaryContact?.email || supplier.name : 'supplier intake'}
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2 py-1 text-[11px] font-semibold text-accent-ink">
+            <RotateCw size={11} strokeWidth={2.25} className="animate-spin" />
+            Extracting
+          </span>
+        </div>
+
+        <div className="mt-8 grid grid-cols-[120px_1fr] gap-x-5 gap-y-3 text-sm">
+          <div className="text-xs font-medium text-ink-500">Supplier</div>
+          <div className="h-4 w-48 animate-pulse rounded bg-paper-200" />
+          <div className="text-xs font-medium text-ink-500">Evidence type</div>
+          <div className="h-4 w-56 animate-pulse rounded bg-paper-200" />
+          <div className="text-xs font-medium text-ink-500">Pillar</div>
+          <div className="text-sm text-ink-700">
+            {pillar ? pillar.fullLabel : 'classifying'}
+          </div>
+          <div className="text-xs font-medium text-ink-500">Status</div>
+          <div className="text-sm text-ink-700">OCR and field map in progress</div>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          <div className="h-3 w-64 animate-pulse rounded bg-paper-200" />
+          <div className="h-3 w-full animate-pulse rounded bg-paper-200" />
+          <div className="h-3 w-11/12 animate-pulse rounded bg-paper-200" />
+          <div className="h-3 w-4/5 animate-pulse rounded bg-paper-200" />
+        </div>
+
+        <div className="mt-8 grid grid-cols-2 gap-3">
+          <div className="rounded-md border border-paper-300 bg-paper-50 p-3">
+            <div className="h-2 w-20 rounded bg-paper-200" />
+            <div className="mt-3 h-8 animate-pulse rounded bg-paper-200" />
+          </div>
+          <div className="rounded-md border border-paper-300 bg-paper-50 p-3">
+            <div className="h-2 w-24 rounded bg-paper-200" />
+            <div className="mt-3 h-8 animate-pulse rounded bg-paper-200" />
+          </div>
+        </div>
+
+        <div className="mt-auto border-t border-paper-300 pt-4">
+          <div className="h-2 w-36 rounded bg-paper-200" />
+          <div className="mt-2 h-2 w-52 rounded bg-paper-200" />
+        </div>
       </div>
     </div>
   );
@@ -441,6 +535,85 @@ function CapturedField({ field }) {
       {field.note ? (
         <p className="mt-0.5 text-[11px] text-ink-500">{field.note}</p>
       ) : null}
+    </div>
+  );
+}
+
+function ExtractionProcessingBlock({ doc }) {
+  const steps = [
+    {
+      label: 'Classifying document',
+      value: doc.pillarKey === 'fei' ? 'MoCRA §606 registration' : 'allergen declaration',
+      state: 'complete',
+    },
+    {
+      label: 'Reading highlighted fields',
+      value: 'supplier, validity, status, signer, table regions',
+      state: 'active',
+    },
+    {
+      label: 'Updating supplier record',
+      value: 'clearing prior gap after evidence check',
+      state: 'pending',
+    },
+  ];
+  return (
+    <div className="rounded-lg border border-accent/30 bg-paper-0 px-3 py-3 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent-ink">
+          <RotateCw size={15} strokeWidth={2.25} className="animate-spin" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold text-ink-900">
+            Processing refreshed evidence
+          </div>
+          <p className="mt-0.5 text-[11px] leading-snug text-ink-500">
+            Valent is re-running extraction against the newly received document before updating the captured fields.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {steps.map((step) => (
+          <div
+            key={step.label}
+            className="rounded-md border border-paper-300 bg-paper-50 px-2.5 py-2"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
+                {step.label}
+              </span>
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  step.state === 'complete'
+                    ? 'bg-ok'
+                    : step.state === 'active'
+                      ? 'animate-pulse bg-accent'
+                      : 'bg-paper-300'
+                }`}
+              />
+            </div>
+            <div className="mt-1 text-xs text-ink-700">{step.value}</div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-paper-200">
+              <div
+                className={`h-full rounded-full ${
+                  step.state === 'complete'
+                    ? 'w-full bg-ok'
+                    : step.state === 'active'
+                      ? 'w-2/3 animate-pulse bg-accent'
+                      : 'w-1/4 bg-paper-300'
+                }`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 rounded-md border border-dashed border-paper-300 bg-paper-50 px-3 py-2">
+        <div className="mb-1 h-2 w-28 rounded bg-paper-200" />
+        <div className="h-2 w-full rounded bg-paper-200" />
+        <div className="mt-1.5 h-2 w-4/5 rounded bg-paper-200" />
+      </div>
     </div>
   );
 }
@@ -696,6 +869,35 @@ function buildCapturedFields(doc, supplier, pillar) {
       confidence: doc.extractionConfidence || 'medium',
       tone: 'info',
     });
+  }
+  if (doc.capturedFields && doc.capturedFields.length > 0) {
+    fields.push(...doc.capturedFields);
+  } else if (doc.extraction && doc.extraction.fields) {
+    const extracted = doc.extraction.fields;
+    if (extracted.section) {
+      fields.push({
+        label: 'Regulatory section',
+        value: extracted.section,
+        confidence: doc.extractionConfidence || 'captured',
+        tone: 'info',
+      });
+    }
+    if (extracted.subject) {
+      fields.push({
+        label: 'Document subject',
+        value: extracted.subject,
+        confidence: doc.extractionConfidence || 'captured',
+        tone: 'info',
+      });
+    }
+    if (extracted.lot) {
+      fields.push({
+        label: 'Lot number',
+        value: extracted.lot,
+        confidence: doc.extractionConfidence || 'captured',
+        tone: doc.extractionConfidence === 'low' ? 'warn' : 'ok',
+      });
+    }
   }
   // Pages / file type
   fields.push({

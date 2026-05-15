@@ -10,6 +10,11 @@ Place generated document preview images here using these filenames:
 - faxed-coa-lec-soy-70.png
 - givaudan-safety-under-review-609.png
 - basf-cosmetic-product-listing-607.png
+- basf-allergen-nut-oil-renewed.png
+- basf-fei-houston-606-renewed.png
 
-The final filename is reserved for the §607 image, which was listed in the
+The §607 filename is reserved for the §607 image, which was listed in the
 prompt set but was not present among the attached images in this chat.
+
+The renewed BASF filenames are used after the chase-email demo flow receives
+updated supplier evidence.

@@ -12,7 +12,7 @@ export const PERSONAS = {
     key: 'clean-digital',
     label: 'Clean digital',
     description:
-      'Born-digital PDF with embedded text. Cleanest extraction path, highest confidence by default.',
+      'PDF with embedded text. Clean capture; highest confidence by default.',
     visual: {
       paperTint: 'paper-0',
       grain: 'none',

@@ -69,6 +69,7 @@ export function TrustProvider({ children }) {
   const [lastViewedSupplierId, setLastViewedSupplierId] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [auditBundle, setAuditBundle] = useState(null);
+  const [documentPreview, setDocumentPreview] = useState(null);
   // Chase-draft modal — surface #4 per docs/70-agentic-surfaces.md. Value
   // shape: { flagId: string } | null. The modal reads the flag + supplier
   // from the live data map, so we don't snapshot state beyond the id.
@@ -231,6 +232,16 @@ export function TrustProvider({ children }) {
 
   const closeAuditBundle = useCallback(() => setAuditBundle(null), []);
 
+  const openDocumentPreview = useCallback((docId, opts = {}) => {
+    if (!docId) return;
+    setDocumentPreview({
+      docId,
+      processing: Boolean(opts.processing),
+    });
+  }, []);
+
+  const closeDocumentPreview = useCallback(() => setDocumentPreview(null), []);
+
   // Accepts either a flagId (string — opens from an existing Review Queue
   // flag) or a context object { supplierId, pillarKey, title? } — opens from
   // a doc-level gap that doesn't have a matching pillar-level flag derived.
@@ -307,6 +318,17 @@ export function TrustProvider({ children }) {
               inboundKey === 'allergen'
                 ? 'BASF Personal Care · refreshed allergen declaration'
                 : 'BASF Personal Care · FEI registration confirmation',
+            action: {
+              type: 'open-document-preview',
+              label: 'Review extraction',
+              docId:
+                inboundKey === 'allergen'
+                  ? 'doc-basf-003'
+                  : 'doc-basf-006',
+              supplierId: 'sup-basf',
+              pillarKey: inboundKey,
+              processing: true,
+            },
             supplierId: 'sup-basf',
           });
         }, CHASE_INBOUND_EVIDENCE_MS);
@@ -412,6 +434,7 @@ export function TrustProvider({ children }) {
       // cross-screen state
       toasts,
       auditBundle,
+      documentPreview,
       chaseDraft,
       chaseSendEvents,
       resolutions,
@@ -429,6 +452,8 @@ export function TrustProvider({ children }) {
       openSupplier,
       openAuditBundle,
       closeAuditBundle,
+      openDocumentPreview,
+      closeDocumentPreview,
       openChaseDraft,
       closeChaseDraft,
       startChaseSend,
@@ -450,6 +475,7 @@ export function TrustProvider({ children }) {
       lastViewedSupplierId,
       toasts,
       auditBundle,
+      documentPreview,
       chaseDraft,
       chaseSendEvents,
       resolutions,
@@ -463,6 +489,8 @@ export function TrustProvider({ children }) {
       openSupplier,
       openAuditBundle,
       closeAuditBundle,
+      openDocumentPreview,
+      closeDocumentPreview,
       openChaseDraft,
       closeChaseDraft,
       startChaseSend,

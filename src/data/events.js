@@ -150,7 +150,7 @@ export const EVENTS = [
     at: '2026-04-11T15:20:00.000Z',
     tone: 'info',
     title: 'FEI re-submission requested',
-    body: 'Template-compose opened for Mara Kessler. Düsseldorf FEI lapsed; certificate requested.',
+    body: 'Template-compose opened for Mara Kessler. Houston Site FEI lapsed; certificate requested.',
   },
   {
     id: 'evt-016',
@@ -195,7 +195,7 @@ export const EVENTS = [
     at: '2026-04-07T19:12:00.000Z',
     tone: 'block',
     title: 'FEI registration lapsed',
-    body: 'Düsseldorf facility FEI expired. Pillar moved to fail pending re-registration.',
+    body: 'Houston Site FEI expired. Pillar moved to fail pending re-registration.',
   },
 ];
 

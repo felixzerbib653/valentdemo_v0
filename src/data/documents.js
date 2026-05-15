@@ -63,7 +63,7 @@ export const DOCUMENTS = [
   },
   {
     id: 'doc-basf-004',
-    title: 'Origin letter · German facility chain',
+    title: 'Origin letter · Glyceryl Stearate chain of custody',
     supplierId: 'sup-basf',
     pillarKey: 'origin',
     source: 'email',
@@ -77,7 +77,7 @@ export const DOCUMENTS = [
     pages: 1,
     previewImage: '/demo-documents/basf-origin-glyceryl-stearate.png',
     extractionScore: 93,
-    validityEndsAt: '2026-12-11T00:00:00.000Z',
+    validityEndsAt: '2026-05-15T00:00:00.000Z',
   },
   {
     id: 'doc-basf-005',
@@ -99,7 +99,7 @@ export const DOCUMENTS = [
   },
   {
     id: 'doc-basf-006',
-    title: 'FEI registration confirmation · Düsseldorf facility',
+    title: 'FEI registration confirmation · Houston Site',
     supplierId: 'sup-basf',
     pillarKey: 'fei',
     source: 'sharepoint',
@@ -285,7 +285,7 @@ export const DOCUMENTS = [
   },
   {
     id: 'doc-imcd-004',
-    title: 'Allergen declaration · refreshed 2026 Q2 (in progress)',
+    title: 'Allergen declaration · SunLuxe Glow Booster (partial)',
     supplierId: 'sup-imcd-greven',
     pillarKey: 'allergen',
     source: 'email',
@@ -293,7 +293,7 @@ export const DOCUMENTS = [
     ingestedAt: '2026-04-15T17:35:00.000Z',
     extractionConfidence: 'medium',
     linkStatus: 'linked',
-    flags: ['partial refresh — 3 of 7 lines updated'],
+    flags: ['partial declaration — 3 of 7 allergen entries incomplete'],
     persona: 'handwritten',
     fileType: 'pdf',
     pages: 1,
@@ -783,7 +783,7 @@ export const DOCUMENTS = [
     ingestedAt: '2026-04-20T12:58:00.000Z',
     extractionConfidence: 'low',
     linkStatus: 'needs-review',
-    flags: ['supplier could not be matched', 'lecithin — candidate Croda'],
+    flags: ['supplier not in master data', 'analysis table OCR failed'],
     persona: 'faxed',
     fileType: 'pdf',
     pages: 1,
@@ -935,9 +935,9 @@ for (const d of DOCUMENTS) {
 // - gap:       the compliance gap (if any). `null` when clean.
 // - nextStep:  suggested operator action. Always present.
 //
-// Only a representative slice is seeded — enough to land on every walkthrough
-// path without seeding all 48. Missing summaries render a graceful fallback
-// ("Agent summary not yet available.") on the preview.
+// Real PNG-backed documents get source-specific summaries. Every other demo
+// document receives a conservative fallback summary below so every modal has a
+// contents/gap/next-step readout.
 const DOCUMENT_SUMMARIES = {
   // BASF — hero supplier, full walkthrough path
   'doc-basf-001': {
@@ -945,37 +945,44 @@ const DOCUMENT_SUMMARIES = {
     gap: null,
     nextStep: 'No action required. Renewal watchpoint set for Mar 2027.',
   },
+  'doc-basf-002': {
+    contents: '§609 safety dossier for Avobenzone with CAS, use level, supporting studies, and toxicologist sign-off captured.',
+    gap: null,
+    nextStep: 'No action required. Keep the dossier linked for safety substantiation review.',
+  },
   'doc-basf-003': {
-    contents: 'Allergen declaration for the nut-oil blend, issued Mar 2025 and superseded by a 2026 ingredient list update.',
-    gap: 'Declaration expired 42 days ago; superseded version not yet on file.',
-    nextStep: 'Chase Mara Kessler for the refreshed allergen statement.',
+    contents: 'Allergen declaration for BASF nut-derived oils, issued Mar 9 2025 and valid through Mar 9 2026.',
+    gap: 'The allergen statement is expired and stamped renewal required; it should not support a current audit packet.',
+    nextStep: 'Request a current signed allergen declaration and confirm the nut-oil blend has not changed since the expired version.',
+  },
+  'doc-basf-004': {
+    contents: 'Country-of-origin and chain-of-custody declaration for Glyceryl Stearate, with Germany and Malaysia sources listed.',
+    gap: null,
+    nextStep: 'No action required. Renewal watchpoint set before the May 15 2026 valid-until date.',
   },
   'doc-basf-005': {
-    contents: 'COA for Phenoxyethanol lot 25-114 — identity, expiry, purity, heavy metals, and microbial checks all pass.',
+    contents: 'COA for BASF Phenoxyethanol lot 25-114 with identity, expiry, purity, heavy metals, and microbial checks passing.',
     gap: null,
     nextStep: 'No action required. Lot evidence is ready for the next audit bundle.',
   },
   'doc-basf-006': {
-    contents: '§606 FEI registration confirmation for BASF Personal Care Düsseldorf, extracted cleanly from the FDA letter.',
-    gap: 'The renewal date on the document has passed; a refreshed registration confirmation is needed.',
-    nextStep: 'Chase Mara Kessler for the renewed §606 registration confirmation.',
+    contents: 'FDA §606 facility registration confirmation for BASF Personal Care Houston Site in Pasadena, TX.',
+    gap: 'The Dec 31 2025 renewal date has passed; current active registration evidence is not on file.',
+    nextStep: 'Request the renewed §606 confirmation or renewal receipt before treating this FEI evidence as current.',
   },
 
   // Stepan — demo's "blocker" showcase
   'doc-stepan-003': {
-    contents:
-      'COA for Cocamidopropyl Betaine lot 24-118 — identity and pH within limits, but purity/active content reads below Valent’s acceptance floor. For measured out-of-spec results that are not a documentation mismatch, hold the lot and disposition through quarantine, investigation, and formal QA release — not by requesting another COA unless investigation proves lab error or transcription.',
-    gap:
-      'Measured below acceptance criterion — lot blocked pending QA hold, NC/OOS investigation, verification (correct spec attribute, units, method, representative sample), traceability, then formal disposition.',
-    nextStep:
-      'Place lot 24-118 on QA hold, prevent issuance to production, open an OOS/nonconformance record, and request supplier investigation plus a compliant replacement lot. Do not accept a revised COA unless the supplier documents a valid testing or transcription error.',
+    contents: 'COA for Cocamidopropyl Betaine lot 24-118; appearance, pH, and color pass, but active content is 28.9%.',
+    gap: 'Active content is below the 29.5-31.5 specification, so the lot is out of spec and blocked.',
+    nextStep: 'Place the lot on QA hold, open an OOS/NC record, and request supplier investigation plus replacement material.',
   },
 
   // IMCD — aging allergen refresh
   'doc-imcd-004': {
-    contents: 'Partial Q2 refresh of IMCD-Greven\u2019s allergen declaration covering 3 of 7 ingredient lines.',
-    gap: 'Four lines still reference the 2025 Q3 declaration; aggregate statement is incomplete.',
-    nextStep: 'Ask Thomas Brandt to extend the refresh to the remaining 4 lines before end of month.',
+    contents: 'Handwritten allergen declaration for SunLuxe Glow Booster; four allergen rows are completed and dated 05/20/2024.',
+    gap: 'Rows 5-7 are blank, leaving 3 of 7 allergen entries awaiting upstream confirmation.',
+    nextStep: 'Request a completed signed declaration for rows 5-7 before using this statement for audit or label review.',
   },
 
   // Ashland — hero FEI, clean state
@@ -999,17 +1006,206 @@ const DOCUMENT_SUMMARIES = {
     nextStep: 'Hold for supplier follow-up; re-scan expected when consolidation closes.',
   },
 
+  // Givaudan — under-review safety dossier
+  'doc-givaudan-003': {
+    contents: '§609 safety dossier for Linalyl Acetate with ingredient identity, purity, IFRA context, and toxicology review notes.',
+    gap: 'The dossier is marked under review and the final approving sign-off is still blank.',
+    nextStep: 'Keep the safety pillar pending and chase the toxicology/regulatory approval before adding it to an audit bundle.',
+  },
+
   // Inbox — needs-review
   'doc-inbox-001': {
-    contents: 'COA for a lecithin lot ("LEC-SOY-70") forwarded without a supplier header; identity and purity readings extracted.',
-    gap: 'Supplier attribution unresolved — candidate match is Croda Beauty based on lot-number pattern.',
-    nextStep: 'Confirm Croda as supplier in Review Queue and link to the purity pillar.',
+    contents: 'Faxed COA for Lecithin (Soy) lot LEC-SOY-70 from EuroChem Labs, naming Global BioChem as supplier.',
+    gap: 'Global BioChem is not matched to a supplier record, and the analysis table/signature require manual review.',
+    nextStep: 'Verify the supplier master match or create one, then request a cleaner COA copy if QA needs the full result table.',
   },
 };
 
+const PILLAR_SUMMARY_LABELS = {
+  fei: 'FEI registration',
+  cosmeticListing: 'cosmetic product listing',
+  safety: 'safety substantiation',
+  allergen: 'allergen declaration',
+  origin: 'origin and chain-of-custody',
+  purity: 'purity and identity',
+  freshness: 'documentation freshness',
+};
+
+function titleSubject(doc) {
+  const parts = doc.title.split(' · ');
+  return (parts[1] || parts[0] || 'this evidence')
+    .replace(/\s*\(.+\)\s*$/, '')
+    .trim();
+}
+
+function summarizeGapFromFlags(doc) {
+  const flags = (doc.flags || []).join(' | ').toLowerCase();
+  if (!flags) return null;
+  if (flags.includes('expired') || flags.includes('renewal date passed')) {
+    return 'The document is outside its stated validity or renewal window and needs current evidence.';
+  }
+  if (flags.includes('draft') || flags.includes('sign-off') || flags.includes('citations')) {
+    return 'The file is not final enough for release or audit support.';
+  }
+  if (flags.includes('spec') || flags.includes('floor') || flags.includes('blocks shipment')) {
+    return 'A measured result is outside the acceptance criteria, so QA disposition is required.';
+  }
+  if (flags.includes('partial') || flags.includes('incomplete')) {
+    return 'The declaration is incomplete and cannot be relied on until the missing entries are supplied.';
+  }
+  if (flags.includes('awaiting') || flags.includes('consolidation')) {
+    return 'Upstream chain-of-custody evidence is still pending.';
+  }
+  if (flags.includes('supplier') || flags.includes('facility') || flags.includes('ocr')) {
+    return 'The extraction needs manual review before the document can be linked with confidence.';
+  }
+  if (flags.includes('aging') || flags.includes('expires')) {
+    return 'The evidence is approaching the end of its validity window.';
+  }
+  if (flags.includes('first-ingest')) {
+    return 'This is first-pass onboarding evidence and still needs the remaining supplier file assembled.';
+  }
+  return `Flagged for review: ${doc.flags.join('; ')}.`;
+}
+
+function summarizeNextStep(doc, gap) {
+  if (!gap) {
+    if (doc.validityEndsAt) {
+      return `No action required. Keep on renewal watch before ${doc.validityEndsAt.slice(0, 10)}.`;
+    }
+    return 'No action required. Keep the evidence available for the current supplier file.';
+  }
+  if (doc.linkStatus === 'failed') {
+    return 'Route to manual review and request a readable replacement if the source image cannot be recovered.';
+  }
+  if (doc.linkStatus === 'needs-review') {
+    return 'Confirm the supplier and pillar assignment in Review Queue before linking this evidence.';
+  }
+  if (doc.pillarKey === 'purity') {
+    return 'Hold affected material in QA, open a nonconformance if needed, and request supplier investigation.';
+  }
+  if (doc.pillarKey === 'safety') {
+    return 'Request the final signed dossier with citations before marking safety substantiation complete.';
+  }
+  if (doc.pillarKey === 'allergen') {
+    return 'Request a current, complete allergen declaration before using this evidence in an audit packet.';
+  }
+  if (doc.pillarKey === 'origin') {
+    return 'Chase upstream documentation and keep the origin pillar pending until the chain is complete.';
+  }
+  if (doc.pillarKey === 'fei') {
+    return 'Request current FDA registration evidence and keep the FEI pillar blocked until received.';
+  }
+  return 'Assign the document to operator review and chase the supplier for corrected evidence.';
+}
+
+function buildDefaultDocumentSummary(doc) {
+  const pillarLabel = PILLAR_SUMMARY_LABELS[doc.pillarKey] || 'unclassified';
+  const subject = titleSubject(doc);
+  const gap = summarizeGapFromFlags(doc);
+  return {
+    contents: `${pillarLabel} evidence for ${subject} is on file from ${doc.source || 'source'} intake.`,
+    gap,
+    nextStep: summarizeNextStep(doc, gap),
+  };
+}
+
 for (const d of DOCUMENTS) {
-  const summary = DOCUMENT_SUMMARIES[d.id];
-  if (summary) d.summary = summary;
+  d.summary = DOCUMENT_SUMMARIES[d.id] || buildDefaultDocumentSummary(d);
+}
+
+const DOCUMENT_CAPTURED_FIELDS = {
+  'doc-basf-002': [
+    { label: 'Chemical name', value: 'Butyl Methoxydibenzoylmethane (Avobenzone)', confidence: 'high', tone: 'ok' },
+    { label: 'CAS number', value: '70356-09-1', confidence: 'high', tone: 'ok' },
+    { label: 'Use level', value: '0.5-3.0%', confidence: 'high', tone: 'ok' },
+    { label: 'Supporting studies', value: '4 detected', confidence: 'captured', tone: 'ok' },
+    { label: 'Expert sign-off', value: 'Lauren E. Fisher, PhD, DABT', confidence: 'structural', tone: 'ok' },
+    { label: 'Document date', value: 'May 16, 2025', confidence: 'captured', tone: 'info' },
+  ],
+  'doc-basf-003': [
+    { label: 'Supplier on document', value: 'BASF Personal Care and Nutrition GmbH', confidence: 'exact', tone: 'ok' },
+    { label: 'Issue date', value: 'March 9, 2025', confidence: 'captured', tone: 'info' },
+    { label: 'Valid through', value: 'March 9, 2026', confidence: 'expired 42d ago', tone: 'block' },
+    { label: 'Allergen data', value: '8 rows captured for almond, coconut, argan, and macadamia nut oils', confidence: 'high', tone: 'ok' },
+    { label: 'Document status', value: 'Expired - renewal required', confidence: 'flagged', tone: 'block' },
+    { label: 'Authorized signer', value: 'Dr. Svenja Meier', confidence: 'structural', tone: 'ok' },
+  ],
+  'doc-basf-004': [
+    { label: 'Supplier on document', value: 'BASF SE', confidence: 'exact', tone: 'ok' },
+    { label: 'Document number', value: 'COC-2025-04578', confidence: 'captured', tone: 'info' },
+    { label: 'Product', value: 'Glyceryl Stearate', confidence: 'high', tone: 'ok' },
+    { label: 'CAS number', value: '31566-31-1', confidence: 'captured', tone: 'info' },
+    { label: 'Origin countries', value: 'Germany; Malaysia', confidence: 'high', tone: 'ok' },
+    { label: 'Chain of custody', value: '2 Tier 1 raw-material sources captured', confidence: 'high', tone: 'ok' },
+    { label: 'Authorized signer', value: 'Thomas Becker', confidence: 'structural', tone: 'ok' },
+  ],
+  'doc-basf-005': [
+    { label: 'Supplier on document', value: 'BASF Corporation', confidence: 'exact', tone: 'ok' },
+    { label: 'Product', value: 'Phenoxyethanol', confidence: 'high', tone: 'ok' },
+    { label: 'CAS number', value: '122-99-0', confidence: 'captured', tone: 'info' },
+    { label: 'Lot number', value: '25-114', confidence: 'high', tone: 'ok' },
+    { label: 'Manufacturing date', value: 'Oct 2025', confidence: 'captured', tone: 'info' },
+    { label: 'Expiry date', value: 'September 2026', confidence: 'high', tone: 'ok' },
+    { label: 'Purity result', value: '99.4% (spec >=99.0%) - Pass', confidence: 'captured', tone: 'ok' },
+    { label: 'Authorized signature', value: 'Michael T. Anderson, QA Manager', confidence: 'structural', tone: 'ok' },
+  ],
+  'doc-basf-006': [
+    { label: 'Registrant', value: 'BASF Personal Care, Inc.', confidence: 'exact', tone: 'ok' },
+    { label: 'Facility', value: 'Houston Site', confidence: 'captured', tone: 'ok' },
+    { label: 'Address', value: '11500 Bay Area Blvd, Pasadena TX 77507', confidence: 'captured', tone: 'info' },
+    { label: 'FEI number', value: '3012XXXXXX', confidence: 'high', tone: 'ok' },
+    { label: 'Registration status', value: 'Active', confidence: 'high', tone: 'ok' },
+    { label: 'Effective date', value: 'January 15, 2024', confidence: 'captured', tone: 'info' },
+    { label: 'Renewal date', value: 'December 31, 2025', confidence: 'expired', tone: 'block' },
+  ],
+  'doc-stepan-003': [
+    { label: 'Product', value: 'Cocamidopropyl Betaine (CAPB)', confidence: 'captured', tone: 'ok' },
+    { label: 'CAS number', value: '61789-40-0', confidence: 'captured', tone: 'info' },
+    { label: 'Lot number', value: '24-118', confidence: 'high', tone: 'ok' },
+    { label: 'Manufacture date', value: 'Oct 28, 2024', confidence: 'captured', tone: 'info' },
+    { label: 'Retest date', value: 'Oct 28, 2026', confidence: 'captured', tone: 'info' },
+    { label: 'Active content result', value: '28.9%', confidence: 'review', tone: 'warn' },
+    { label: 'Active content spec', value: '29.5-31.5%', confidence: 'flagged', tone: 'block' },
+    { label: 'Disposition note', value: 'Hand-marked FAIL on active content row', confidence: 'captured', tone: 'block' },
+  ],
+  'doc-imcd-004': [
+    { label: 'Product', value: 'SunLuxe Glow Booster', confidence: 'captured', tone: 'ok' },
+    { label: 'INCI / chemical name', value: 'Caprylyl/Capryl Glucoside', confidence: 'captured', tone: 'ok' },
+    { label: 'Product code', value: 'IMCD-CLG-100', confidence: 'captured', tone: 'info' },
+    { label: 'Batch / lot number', value: '24A15-0726', confidence: 'captured', tone: 'info' },
+    { label: 'Declaration date', value: '05/20/2024', confidence: 'high', tone: 'ok' },
+    { label: 'Completed allergen rows', value: '4 of 7 completed; rows 5-7 blank', confidence: 'review', tone: 'warn' },
+    { label: 'Present allergens', value: 'Benzyl Alcohol; Linalool', confidence: 'high', tone: 'ok' },
+    { label: 'Operator annotation', value: '3 of 7 lines awaiting upstream confirmation', confidence: 'captured', tone: 'warn' },
+  ],
+  'doc-givaudan-003': [
+    { label: 'Document status', value: 'Under review', confidence: 'pending review', tone: 'warn' },
+    { label: 'Ingredient name', value: 'Linalyl Acetate', confidence: 'high', tone: 'ok' },
+    { label: 'CAS number', value: '115-95-7', confidence: 'high', tone: 'ok' },
+    { label: 'EC number', value: '204-116-4', confidence: 'high', tone: 'ok' },
+    { label: 'FEMA number', value: '2636', confidence: 'high', tone: 'ok' },
+    { label: 'Purity', value: '>= 98.0%', confidence: 'high', tone: 'ok' },
+    { label: 'Odor profile', value: 'Floral, lavender, citrus', confidence: 'high', tone: 'ok' },
+    { label: 'Expert sign-off', value: 'Prepared and reviewed; final approval blank', confidence: 'pending', tone: 'warn' },
+    { label: 'Operator annotation', value: 'Sent to Tox 2026-03-15 - awaiting sign-off', confidence: 'captured', tone: 'warn' },
+  ],
+  'doc-inbox-001': [
+    { label: 'Sender lab', value: 'EuroChem Labs GmbH', confidence: 'captured', tone: 'info' },
+    { label: 'Supplier on document', value: 'Global BioChem Ingredients Co., Ltd.', confidence: 'unmatched', tone: 'block' },
+    { label: 'Product', value: 'Lecithin (Soy)', confidence: '92%', tone: 'ok' },
+    { label: 'CAS number', value: '8002-43-5', confidence: '95%', tone: 'ok' },
+    { label: 'Lot number', value: 'LEC-SOY-70', confidence: 'low', tone: 'warn' },
+    { label: 'Manufacture date', value: '07-28-2024', confidence: 'captured', tone: 'info' },
+    { label: 'Retest date', value: '07-27-2026', confidence: 'captured', tone: 'info' },
+    { label: 'Analysis results', value: 'Table region detected, OCR failed', confidence: 'manual review', tone: 'block' },
+    { label: 'Signature', value: 'Unreadable quality-control signature', confidence: 'low', tone: 'warn' },
+  ],
+};
+
+for (const d of DOCUMENTS) {
+  const capturedFields = DOCUMENT_CAPTURED_FIELDS[d.id];
+  if (capturedFields) d.capturedFields = capturedFields;
 }
 
 const BASF_INBOUND_OVERRIDES = {
@@ -1023,15 +1219,22 @@ const BASF_INBOUND_OVERRIDES = {
     extractionScore: 96,
     ingestedAt: null,
     validityEndsAt: '2027-04-20T00:00:00.000Z',
+    previewImage: '/demo-documents/basf-allergen-nut-oil-renewed.png',
+    capturedFields: [
+      { label: 'Supplier on document', value: 'BASF Personal Care and Nutrition GmbH', confidence: 'exact', tone: 'ok' },
+      { label: 'Document status', value: 'Current - supersedes expired Mar 2026 statement', confidence: 'captured', tone: 'ok' },
+      { label: 'Valid through', value: 'April 20, 2027', confidence: 'high', tone: 'ok' },
+      { label: 'Allergen data', value: 'Current nut-oil blend declaration captured', confidence: 'high', tone: 'ok' },
+    ],
     summary: {
-      contents: 'Refreshed allergen declaration covers the current nut-oil blend and supersedes the 2024 statement.',
+      contents: 'Refreshed allergen declaration covers the current nut-oil blend and supersedes the expired 2026 statement.',
       gap: null,
       nextStep: 'No action required. Updated declaration is ready for the next audit bundle.',
     },
   },
   fei: {
     id: 'doc-basf-006',
-    title: 'FEI registration confirmation · Düsseldorf facility',
+    title: 'FEI registration confirmation · Houston Site',
     flags: [],
     source: 'email',
     sourceDetail: 'm.kessler@basf-personal-care.example',
@@ -1039,8 +1242,15 @@ const BASF_INBOUND_OVERRIDES = {
     extractionScore: 97,
     ingestedAt: null,
     validityEndsAt: '2027-04-20T00:00:00.000Z',
+    previewImage: '/demo-documents/basf-fei-houston-606-renewed.png',
+    capturedFields: [
+      { label: 'Facility', value: 'Houston Site', confidence: 'captured', tone: 'ok' },
+      { label: 'Registration status', value: 'Active', confidence: 'high', tone: 'ok' },
+      { label: 'Renewal evidence', value: 'Renewed confirmation received', confidence: 'high', tone: 'ok' },
+      { label: 'Valid through', value: 'April 20, 2027', confidence: 'high', tone: 'ok' },
+    ],
     summary: {
-      contents: 'Renewed §606 FEI registration confirmation for the BASF Düsseldorf facility.',
+      contents: 'Renewed §606 FEI registration confirmation for the BASF Houston Site.',
       gap: null,
       nextStep: 'No action required. Registration is current and linked to the FEI pillar.',
     },
@@ -1060,10 +1270,12 @@ export function applyBasfDemoDocumentOverrides(docs, inbound) {
     const override = BASF_INBOUND_OVERRIDES[key];
     const ingestedAt =
       typeof inbound[key] === 'string' ? inbound[key] : doc.ingestedAt;
+    const merged = { ...doc, ...override, ingestedAt };
     return {
-      ...doc,
-      ...override,
-      ingestedAt,
+      ...merged,
+      // Keep hero preview art unless an override supplies a real path (null must
+      // not wipe DOCUMENTS' previewImage after the BASF inbound demo merge).
+      previewImage: merged.previewImage ?? doc.previewImage,
       extraction: buildExtraction({
         ...doc,
         ...override,

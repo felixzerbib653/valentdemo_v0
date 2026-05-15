@@ -9,9 +9,14 @@ import TrustGrid from './components/grid/TrustGrid.jsx';
 import SupplierDetail from './components/detail/SupplierDetail.jsx';
 import AuditBundleModal from './components/bundle/AuditBundleModal.jsx';
 import ChaseDraftModal from './components/review/ChaseDraftModal.jsx';
+import DocumentPreview from './components/detail/DocumentPreview.jsx';
 import IngestInbox from './components/ingest/IngestInbox.jsx';
 import ReviewQueue from './components/review/ReviewQueue.jsx';
 import AdminAdoption from './components/admin/AdminAdoption.jsx';
+import {
+  DOCUMENTS_BY_ID,
+  applyBasfDemoDocumentOverrides,
+} from './data/documents.js';
 
 // App shell per docs/40-build-order.md §Phase 1 + §Phase 4.
 // TrustProvider wraps everything. Sidebar + TopBar are the chrome.
@@ -134,6 +139,28 @@ function WedgeRoadmapStrip() {
   );
 }
 
+function GlobalDocumentPreview() {
+  const {
+    documentPreview,
+    closeDocumentPreview,
+    basfDemoInboundEvidence,
+  } = useTrust();
+  if (!documentPreview) return null;
+  const base = DOCUMENTS_BY_ID[documentPreview.docId];
+  if (!base) return null;
+  const doc =
+    base.supplierId === 'sup-basf'
+      ? applyBasfDemoDocumentOverrides([base], basfDemoInboundEvidence)[0]
+      : base;
+  return (
+    <DocumentPreview
+      doc={doc}
+      initialProcessing={documentPreview.processing}
+      onClose={closeDocumentPreview}
+    />
+  );
+}
+
 function Shell() {
   const { mode } = useTrust();
   const isWedge = mode === 'wedge';
@@ -149,6 +176,7 @@ function Shell() {
       </div>
       <AuditBundleModal />
       <ChaseDraftModal />
+      <GlobalDocumentPreview />
       <ToastStack />
     </div>
   );

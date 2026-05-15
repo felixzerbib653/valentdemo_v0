@@ -45,7 +45,7 @@ export const TODAYS_WORK = [
     supplierId: 'sup-basf',
     flagId: 'flag-sup-basf-fei',
     severity: 'blocker',
-    title: 'Chase BASF Düsseldorf FEI registration',
+    title: 'Chase BASF Houston FEI registration',
     reason:
       'Renewal paperwork was sent 29 days ago on 2026-03-22; no response from Mara Kessler. Cannot ship any BASF ingredient under MoCRA without this.',
     dueHint: '29d overdue',

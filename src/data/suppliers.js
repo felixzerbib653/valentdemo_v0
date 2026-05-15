@@ -27,7 +27,7 @@ const roster = [
       lastContactedAt: '2026-04-11T15:20:00.000Z',
     },
     notes:
-      'Consolidated supplier record across Ludwigshafen and Düsseldorf facilities. FEI on the Düsseldorf site has lapsed — paperwork sent 2026-03-22, no response. Allergen statement from 2025 no longer reflects the current nut-oil blend.',
+      'Consolidated supplier record across Ludwigshafen and Houston/Pasadena facilities. FEI on the Houston site has lapsed — paperwork sent 2026-03-22, no response. Allergen statement from 2025 no longer reflects the current nut-oil blend.',
     pillars: {
       fei: 'fail',
       cosmeticListing: 'pass',
