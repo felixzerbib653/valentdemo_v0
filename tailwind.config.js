@@ -86,9 +86,14 @@ export default {
           '0%, 100%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.55', transform: 'scale(0.9)' },
         },
+        'boot-shimmer': {
+          '0%': { transform: 'translateX(-120%)' },
+          '100%': { transform: 'translateX(350%)' },
+        },
       },
       animation: {
         'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+        'boot-shimmer': 'boot-shimmer 1.4s ease-in-out infinite',
       },
     },
   },

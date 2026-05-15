@@ -1,5 +1,6 @@
 import React from 'react';
 import { TrustProvider, useTrust } from './context/TrustContext.jsx';
+import BootGate from './components/shell/BootGate.jsx';
 import Sidebar from './components/shell/Sidebar.jsx';
 import TopBar from './components/shell/TopBar.jsx';
 import LockedPageShell from './components/shell/LockedPageShell.jsx';
@@ -147,7 +148,9 @@ function Shell() {
 export default function App() {
   return (
     <TrustProvider>
-      <Shell />
+      <BootGate>
+        <Shell />
+      </BootGate>
     </TrustProvider>
   );
 }
